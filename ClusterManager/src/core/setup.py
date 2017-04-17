@@ -6,7 +6,6 @@ from boto.ec2.regioninfo import RegionInfo
 
 def connect():
     
-    
     region=RegionInfo(name='melbourne', endpoint='nova.rc.nectar.org.au')
     
     ec2_conn = boto.connect_ec2(aws_access_key_id='741b95cd6ff9487c93feddbdf0dbdf8a',

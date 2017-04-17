@@ -1,0 +1,63 @@
+---
+  - name: Provision an EC2 Instance
+    hosts: local
+    connection: local
+    gather_facts: False
+    tags: provisioning
+    # Necessary Variables for creating/provisioning the EC2 Instance
+    vars:
+      instance_type: m2.tiny
+      security_group: default # Change the security group name here
+      image: ami-86f4a44c
+      ec2_url: https://nova.rc.nectar.org.au:8773/services/Cloud
+      keypair: team32KeyPair # Change the keypair name
+      zone: melbourne-np
+      volume_id: vol-89d5d075
+      d_name: /dev/vdc
+      v_name: test
+      count: 1
+      st: present
+
+    # Task that will be used to Launch/Create an EC2 Instance
+    tasks:
+      - name: Launch the new EC2 Instance
+        local_action: ec2 
+                      group={{ security_group }} 
+                      instance_type={{ instance_type }} 
+                      image={{ image }} 
+                      wait=true 
+                      ec2_url={{ ec2_url }} 
+                      keypair={{ keypair }}
+                      zone={{ zone }}
+                      count={{count}}
+        register: ec2
+
+      - name: Add the newly created EC2 instance(s) to the local host group (located inside the directory)
+        local_action: lineinfile 
+                      dest="./hosts" 
+                      regexp={{ item.private_ip }} 
+                      insertafter="[webserver]" line={{ item.private_ip }}
+        with_items: "{{ ec2.instances }}"
+
+
+      - name: Wait for SSH to come up
+        local_action: wait_for 
+                      host={{ item.private_ip }} 
+                      port=22 
+                      state=started
+        with_items: "{{ ec2.instances }}"
+
+      - name: attach ec2 volume
+        local_action: ec2_vol
+                      ec2_url={{ ec2_url }}
+                      instance= {{ item.id }}
+                      id={{ volume_id}}
+                      device_name= {{d_name}}
+                      state="{{st}}"
+                      region= {{ zone }}
+        with_items: "{{ ec2.instances }}"
+        register: ec2_vol
+
+
+
+
