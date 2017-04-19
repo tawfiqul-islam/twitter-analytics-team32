@@ -1,6 +1,6 @@
 ---
   - name: Provision an EC2 Instance
-    hosts: local
+    hosts: VM
     connection: local
     gather_facts: False
     tags: provisioning
