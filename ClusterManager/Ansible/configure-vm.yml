@@ -1,0 +1,7 @@
+---
+- hosts: webserver
+  remote_user: ubuntu
+  sudo: yes
+
+  tasks:
+    - include: tasks/transfer-files.yml

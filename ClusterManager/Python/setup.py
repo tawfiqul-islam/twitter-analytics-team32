@@ -46,6 +46,8 @@ def createVM(ec2_conn):
 
 def startUpVM(ec2_conn):
     reservations = ec2_conn.get_all_reservations()
+    f = open('../Ansible/hosts', 'w')
+    f.write('[webserver]\n')  
     i=0
     for res in reservations:
         for ins in res.instances:
@@ -53,7 +55,9 @@ def startUpVM(ec2_conn):
                 time.sleep(5)
                 ins.update()
             print 'instance ', i , ' id:', ins.id
+            f.write(ins.private_ip_address+'\n')
             i=i+1   
+    f.close() 
     return;
 
 def findMasterVM(ec2_conn):
@@ -85,14 +89,18 @@ def terminateVolume():
 def main():
      
     ec2_conn=connect()
+    startUpVM(ec2_conn)
+    
     #findImage(ec2_conn)
-    createVM(ec2_conn)
-    if(VOLUME_CREATE=='yes'):
-        createVolume(ec2_conn)
-    if(VOLUME_ATTACH=='yes'):
-        masterVMId=findMasterVM(ec2_conn)
-        volumeId=findVolume(ec2_conn)
-        attachVolume(ec2_conn, volumeId, masterVMId)
+    #===========================================================================
+    # createVM(ec2_conn)
+    # if(VOLUME_CREATE=='yes'):
+    #     createVolume(ec2_conn)
+    # if(VOLUME_ATTACH=='yes'):
+    #     masterVMId=findMasterVM(ec2_conn)
+    #     volumeId=findVolume(ec2_conn)
+    #     attachVolume(ec2_conn, volumeId, masterVMId)
+    #===========================================================================
 
     return;
     

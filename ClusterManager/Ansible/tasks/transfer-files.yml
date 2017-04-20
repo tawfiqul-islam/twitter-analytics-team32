@@ -1,0 +1,7 @@
+- copy:
+    src: ../Scripts/test.sh
+    dest: /home/ubuntu/test.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: 0644
+- command: sh /home/ubuntu/test.sh
