@@ -1,39 +1,44 @@
 
-def calculate_pos_neg(sum_sentiment, pos, neg, threshold):
-    if sum_sentiment > threshold:
-        pos += 1
-    elif sum_sentiment < -threshold:
-        neg += 1
+def calculate_pos_neg(sum_sentiment, pos, neg, threshold, is_emo):
+    if is_emo:
+        if sum_sentiment > threshold:
+            pos += 2
+        elif sum_sentiment < -threshold:
+            neg += 2
+    else:
+        if sum_sentiment > threshold:
+            pos += 1
+        elif sum_sentiment < -threshold:
+            neg += 1
     return pos, neg
 
 
 def calculate_emoti_senti(tweet, pos_emoticon, neg_emoticon, pos, neg):
     count_t_pos = 0
     count_t_neg = 0
+    threshold = 0
+    is_emo = True
     for word in tweet:
         if word in pos_emoticon:
             count_t_pos += 1
             continue
         if word in neg_emoticon:
             count_t_neg += 1
-    if count_t_pos - count_t_neg > 0:
-        pos += 1
-    elif count_t_neg - count_t_pos > 0:
-        neg += 1
+    sum_senti = count_t_pos - count_t_neg
+    pos, neg = calculate_pos_neg(sum_senti, pos, neg, threshold, is_emo)
     
     return pos, neg
 
 def calculate_emoji_senti(tweet, emojis, pos, neg):
 
     cur_senti = 0.0
+    threshold = 0.0
+    is_emo = True
     for word in tweet:
         if word in emojis:
             cur_senti += emojis[word]
 
-    if cur_senti > 0:
-        pos += 1
-    elif cur_senti < 0:
-        neg += 1
+    pos, neg = calculate_pos_neg(cur_senti, pos, neg, threshold, is_emo)
 
     return pos, neg
     
@@ -41,11 +46,12 @@ def calculate_emoji_senti(tweet, emojis, pos, neg):
 def calculate_afinn_senti(tweet, afinn, pos, neg):
     sum_senti = 0.0
     threshold = 3
+    is_emo = False
     for word in tweet:
         if word in afinn:
             sum_senti += afinn.get(word)
     
-    pos, neg = calculate_pos_neg(sum_senti, pos, neg, threshold)
+    pos, neg = calculate_pos_neg(sum_senti, pos, neg, threshold, is_emo)
     
     return pos, neg
             
@@ -53,13 +59,14 @@ def calculate_minqing_senti(tweet, pos_minging, neg_minging, pos, neg):
     
     tweet_set = set(tweet)
     threshold = 0
+    is_emo = False
     pos_num = len(tweet_set & pos_minging)
     neg_num = len(tweet_set & neg_minging)
     
     sum_sentiment = pos_num - neg_num
     
     
-    pos, neg = calculate_pos_neg(sum_sentiment, pos, neg, threshold)
+    pos, neg = calculate_pos_neg(sum_sentiment, pos, neg, threshold, is_emo)
     
     return pos, neg
 

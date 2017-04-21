@@ -25,7 +25,7 @@ class TrainData(Document):
 	label = IntegerField()
 	features = TextField()
 
-def main():
+def main(argv):
 	# connect to database
 	couch = couchdb.Server('http://localhost:5984/')
 	if 'sentiment' not in couch:
@@ -34,11 +34,10 @@ def main():
 		db = couch['sentiment']
 
 	# load dictionary
-	emojis = {}
-	afinn_dict = load_dict.load_afinn()
+	afinn_dict = load_dict.load_afinn(argv[1])
 	pos_emoti, neg_emoti, neu_emoti = load_dict.load_emoti()
-	emojis = load_dict.load_emoji()
-	pos_1_set, neg_1_set = load_dict.load_minging_dict()
+	emojis = load_dict.load_emoji(argv[2])
+	pos_1_set, neg_1_set = load_dict.load_minging_dict(argv[3], argv[4])
 	
 
 	# get all documents' id
@@ -82,7 +81,7 @@ def main():
 
 
 if __name__ == '__main__':
-	main()
+	main(sys.argv)
 
 
 
