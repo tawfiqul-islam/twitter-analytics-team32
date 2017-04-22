@@ -1,4 +1,4 @@
-
+import re
 def calculate_pos_neg(sum_sentiment, pos, neg, threshold, is_emo):
     if is_emo:
         if sum_sentiment > threshold:
@@ -13,16 +13,23 @@ def calculate_pos_neg(sum_sentiment, pos, neg, threshold, is_emo):
     return pos, neg
 
 
-def calculate_emoti_senti(tweet, pos_emoticon, neg_emoticon, pos, neg):
+def calculate_emoti_senti(tweet, pos, neg):
     count_t_pos = 0
     count_t_neg = 0
     threshold = 0
     is_emo = True
+
+    pos_string = '[:;=＝]+\s*-*\s*[oO]*[dD)pP\]]'
+    neg_string = r'[:;=＝]+\s*-*\s*[oO]*[(/\\]*'
+    pos_regex = re.compile(pos_string)
+    neg_regex = re.compile(neg_string)
+
+
     for word in tweet:
-        if word in pos_emoticon:
+        if pos_regex.findall(word):
             count_t_pos += 1
             continue
-        if word in neg_emoticon:
+        if neg_regex.findall(word):
             count_t_neg += 1
     sum_senti = count_t_pos - count_t_neg
     pos, neg = calculate_pos_neg(sum_senti, pos, neg, threshold, is_emo)
@@ -71,19 +78,24 @@ def calculate_minqing_senti(tweet, pos_minging, neg_minging, pos, neg):
     return pos, neg
 
 
-def create_training_set(tweet, train_data, train_label, pos, neg):
+def create_training_set(tweet, train_data, train_label, id, ids, geo_code, geo_codes, pos, neg):
     p_or_n = 0
+
     if pos >= 2 and pos>neg:
         p_or_n = 1
         train_label.append(p_or_n)
         each_tweet = ' '.join(tweet)
         train_data.append(each_tweet)
+        ids.append(id)
+        geo_codes.append(geo_code)
     elif neg >= 2 and pos < neg:
         p_or_n = -1
         train_label.append(p_or_n)
         each_tweet = ' '.join(tweet)
         train_data.append(each_tweet)
-    return pos, neg, train_data, train_label
+        ids.append(id)
+        geo_codes.append(geo_code)
+    return pos, neg, train_data, train_label, ids, geo_codes
 
 
 def create_data(tweet, tweets):

@@ -44,29 +44,6 @@ def load_minging_dict(file_name_pos, file_name_neg):
     return pos_1_set, neg_1_set
 
 
-
-
-def load_emoti():
-    positive_emoticon = [ ':)', ':D', ':)', 
-                        ':p', ':P', ':d', ':-)' , 
-                        ':-D', ': D', ': P', '; D', 
-                        '; p', '; d', '; P', ': p', 
-                        ';/', ';)', ';D', ';d', '; )', 
-                        ';p', ';P', '; (', '= P', ';-)', 
-                        '= d', ':  D', '= p', ': )', '=)', 
-                        '=P', '=d', ':d' , '=p', ': ]', ';  p',
-                        ';  d','=D', ';  )',  ': OD','= )',  ':   p', 
-                        ':   P', ';]']
-    negative_emoticon = [':/', ':(', ':-(', '://', ':-\\', ': (', 
-                        '=/', '; \\', ';/' , '=/', '; /', '= (', '=(', 
-                        ': \\', ';(', '=\\', ';----- (',':\\', ':-\\', ': O/']
-    neutral_emoticon = ['; o', ': Ooo', '; O', ': o',  ';o', ': d', 
-                        ': Od', '= O', '= o', ':o', ';O', '; Op', '=o', 
-                        ': Ooooooo', '; Od', '; OP', ': OP', ';  O', ': Oop', 
-                        ': Oooo', ': Oo', ': oo', ': --- O',';-- D', ':  o', 
-                        ': od', ': ooooooo']
-    return positive_emoticon, negative_emoticon, neutral_emoticon
-
 def load_emoji(file_name):
     count = True
     emojis = {}

@@ -21,9 +21,11 @@ import pickle
 from couchdb.mapping import Document, TextField, IntegerField, DateTimeField
 
 class TrainData(Document):
+	t_id = IntegerField()
 	text = TextField()
 	label = IntegerField()
 	features = TextField()
+	geo_code = TextField()
 
 def main(argv):
 	# connect to database
@@ -35,7 +37,6 @@ def main(argv):
 
 	# load dictionary
 	afinn_dict = load_dict.load_afinn(argv[1])
-	pos_emoti, neg_emoti, neu_emoti = load_dict.load_emoti()
 	emojis = load_dict.load_emoji(argv[2])
 	pos_1_set, neg_1_set = load_dict.load_minging_dict(argv[3], argv[4])
 	
@@ -46,26 +47,25 @@ def main(argv):
 		doc_ids.append(id)
 
 	# generate text and label training set
-	total_tweets, labels = gen_set.gen_set(pos_1_set, 
-	                                    neg_1_set,
-	                                    afinn_dict,
-	                                    emojis,
-	                                    pos_emoti,
-	                                    neg_emoti,
-	                                    db,
-	                                    doc_ids)
+	total_tweets, labels, ids, geo_codes = gen_set.gen_set(pos_1_set, 
+					                                    neg_1_set,
+					                                    afinn_dict,
+					                                    emojis,
+					                                    db,
+					                                    doc_ids)
 
 	# vectorise the features of training set
 	vectorizer = CountVectorizer(analyzer = "word",   
 	                             tokenizer = None,    
 	                             preprocessor = None, 
 	                             stop_words = None,   
-	                             max_features = 2000)
+	                             max_features = 10000)
 
 	train_data_features = vectorizer.fit_transform(total_tweets)
 
 	# save the model
 	pickle.dump(vectorizer.vocabulary_,open("counter_model.pkl","wb"))
+	train_data_features = train_data_features.toarray().tolist()
 
 
 	# store the data of training set to another database
@@ -75,7 +75,11 @@ def main(argv):
 		db_train = couch['train_data']
 
 	for i in range(len(labels)):
-	    train_data = TrainData(text = total_tweets[i], label=labels[i], features=train_data_features[i])
+	    train_data = TrainData(t_id = ids[i],
+						    	text = total_tweets[i], 
+						    	label=labels[i], 
+						    	features=train_data_features[i],
+						    	geo_code = geo_codes[i])
 	    train_data.store(db_train)
 
 
