@@ -18,7 +18,7 @@ import numpy as np
 import spell_checker
 import datetime
 import pickle
-from couchdb.mapping import Document, TextField, IntegerField, DateTimeField
+from couchdb.mapping import Document, TextField, IntegerField, DateTimeField, BooleanField
 
 class TrainData(Document):
 	t_id = IntegerField()
@@ -26,70 +26,51 @@ class TrainData(Document):
 	label = IntegerField()
 	features = TextField()
 	geo_code = TextField()
+	is_read = BooleanField()
 
-def main(argv):
-	# connect to database
+def main():
 	couch = couchdb.Server('http://localhost:5984/')
-	if 'sentiment' not in couch:
-		db = couch.create('sentiment')
+	if 'train_data' not in couch:
+		db = couch.create('train_data')
 	else:
-		db = couch['sentiment']
+		db = couch['train_data']
 
-	# load dictionary
-	afinn_dict = load_dict.load_afinn(argv[1])
-	emojis = load_dict.load_emoji(argv[2])
-	pos_1_set, neg_1_set = load_dict.load_minging_dict(argv[3], argv[4])
-	
+	file = open('lr_nectar.pkl', 'rb')
+	lr = pickle.load(file)
 
-	# get all documents' id
-	doc_ids = []
-	for id in db:
-		doc_ids.append(id)
+	re_read = True
 
-	# generate text and label training set
-	total_tweets, labels, ids, geo_codes = gen_set.gen_set(pos_1_set, 
-					                                    neg_1_set,
-					                                    afinn_dict,
-					                                    emojis,
-					                                    db,
-					                                    doc_ids)
+	while True:
+		doc_ids = []
+		train_features = []
+		tweet_id = []
+		temp_doc_ids = []
 
-	# vectorise the features of training set
-	vectorizer = CountVectorizer(analyzer = "word",   
-	                             tokenizer = None,    
-	                             preprocessor = None, 
-	                             stop_words = None,   
-	                             max_features = 10000)
+		for t_id in db:
+			doc_ids.append(t_id)
 
-	train_data_features = vectorizer.fit_transform(total_tweets)
-
-	# save the model
-	pickle.dump(vectorizer.vocabulary_,open("counter_model.pkl","wb"))
-	train_data_features = train_data_features.toarray().tolist()
+		for doc_id in doc_ids:
+			tweet = db[doc_id]
+			if not tweet['is_read']:
+				temp_doc_ids.append(doc_id)
+				# tweet_id.append(tweet['t_id'])
+				train_features.append(tweet['features'])
+				re_read = False
 
 
-	# store the data of training set to another database
-	if "train_data" not in couch:
-		db_train = couch.create('train_data')
-	else:
-		db_train = couch['train_data']
+		if not re_read:
+			train_features = preprocess.format_couchdata(train_features)
+			result = lr.predict(train_features)
 
-	for i in range(len(labels)):
-	    train_data = TrainData(t_id = ids[i],
-						    	text = total_tweets[i], 
-						    	label=labels[i], 
-						    	features=train_data_features[i],
-						    	geo_code = geo_codes[i])
-	    train_data.store(db_train)
+			for i in range(len(temp_doc_ids)):
+				tweet = db.get(temp_doc_ids[i])
+				tweet['label'] = result[i]
+				tweet['is_read'] = True
+				db[temp_doc_ids[i]] = tweet
+			re_read = True
+
 
 
 
 if __name__ == '__main__':
 	main(sys.argv)
-
-
-
-
-
-
-

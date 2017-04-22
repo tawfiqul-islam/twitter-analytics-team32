@@ -19,7 +19,7 @@ import numpy as np
 import spell_checker
 import datetime
 import pickle
-from couchdb.mapping import Document, TextField, IntegerField, DateTimeField
+from couchdb.mapping import Document, TextField, IntegerField, DateTimeField, BooleanField
 
 from sklearn import svm
 from sklearn.model_selection import cross_val_score
@@ -38,6 +38,7 @@ class TrainData(Document):
 	label = IntegerField()
 	features = TextField()
 	geo_code = TextField()
+	is_read = BooleanField()
 
 def main(argv):
 	# connect to database
@@ -74,6 +75,7 @@ def main(argv):
 
 	with open('lr_nectar.pkl', 'wb') as file:
     	pickle.dump(lr, file)
+
 	
 
 
