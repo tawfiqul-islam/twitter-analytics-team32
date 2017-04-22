@@ -28,18 +28,21 @@ class TrainData(Document):
 	geo_code = TextField()
 	is_read = BooleanField()
 
-def main():
+def main(argv):
+	# connect to db
 	couch = couchdb.Server('http://localhost:5984/')
 	if 'train_data' not in couch:
 		db = couch.create('train_data')
 	else:
 		db = couch['train_data']
 
+	# load model
 	file = open('lr_nectar.pkl', 'rb')
 	lr = pickle.load(file)
 
 	re_read = True
 
+	# continuously read from database
 	while True:
 		doc_ids = []
 		train_features = []
@@ -57,7 +60,7 @@ def main():
 				train_features.append(tweet['features'])
 				re_read = False
 
-
+		# if the data is not all predicted, it will predict and update back
 		if not re_read:
 			train_features = preprocess.format_couchdata(train_features)
 			result = lr.predict(train_features)

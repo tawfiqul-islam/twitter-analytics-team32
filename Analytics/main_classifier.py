@@ -63,7 +63,7 @@ def main(argv):
 
 
 
-	#hold-out multinomial Naive Bayes
+	# hold-out logistic regression
 	X_train, X_test, y_train, y_test = train_test_split(
 		train_features, train_label, test_size=0.2, random_state=42)
 
@@ -73,6 +73,7 @@ def main(argv):
 	lr.fit(X_train, y_train)
 	result = lr.predict(X_test)
 
+	# save model
 	with open('lr_nectar.pkl', 'wb') as file:
     	pickle.dump(lr, file)
 
