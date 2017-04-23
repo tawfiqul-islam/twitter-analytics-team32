@@ -5,6 +5,7 @@ import sys
 import jsonpickle
 import os
 import tweepy
+import json
 
 API_KEY = ''
 API_SECRET = ''
@@ -15,7 +16,7 @@ auth = tweepy.AppAuthHandler(API_KEY, API_SECRET)
 api = tweepy.API(auth, wait_on_rate_limit=True,
                    wait_on_rate_limit_notify=True)
 
-searchQuery = ''  # this is what we're searching for
+searchQuery = '(student au) OR (victoria au)'  # this is what we're searching for
 maxTweets = 50000000 # Some arbitrary large number
 tweetsPerQry = 100  # this is the max the API permits
 fName = 'tweets.txt' # We'll store the tweets in a text file.
@@ -27,7 +28,7 @@ sinceId = None
 
 # If results only below a specific ID are, set max_id to that ID.
 # else default to no upper limit, start from the most recent tweet matching the search query.
-max_id = -1L
+max_id = -1
 
 tweetCount = 0
 print("Downloading max {0} tweets".format(maxTweets))
@@ -52,6 +53,7 @@ with open(fName, 'w') as f:
                 print("No more tweets found")
                 break
             for tweet in new_tweets:
+
                 f.write(jsonpickle.encode(tweet._json, unpicklable=False) +
                         '\n')
             tweetCount += len(new_tweets)

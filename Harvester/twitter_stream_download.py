@@ -15,6 +15,7 @@ import argparse
 import string
 import config
 import json
+import couchdb
 
 def get_parser():
     """Get parser for command line arguments."""
@@ -34,15 +35,26 @@ def get_parser():
 class MyListener(StreamListener):
     """Custom StreamListener for streaming data."""
 
-    def __init__(self, data_dir, query):
+    def __init__(self, data_dir, query, db):
         query_fname = format_filename(query)
         self.outfile = "%s/stream_%s.json" % (data_dir, query_fname)
 
+
+
     def on_data(self, data):
         try:
+            #if not couch:
+
             with open(self.outfile, 'a') as f:
-                f.write(data)
-                print(data)
+                tweet = json.loads(data)
+
+                if 'text' in tweet:
+                    if not tweet['retweeted'] and 'rt @' not in tweet:
+
+
+                        db.save(tweet)
+                        f.write(data)
+                        print(data)
                 return True
         except BaseException as e:
             print("Error on_data: %s" % str(e))
@@ -89,6 +101,11 @@ if __name__ == '__main__':
     auth = OAuthHandler(config.consumer_key, config.consumer_secret)
     auth.set_access_token(config.access_token, config.access_secret)
     api = tweepy.API(auth)
+    couch = couchdb.Server('http://localhost:5984/')
+    if 'sentiment' not in couch:
+        db = couch.create('sentiment')
+    else:
+        db = couch['sentiment']
 
-    twitter_stream = Stream(auth, MyListener(args.data_dir, args.query))
+    twitter_stream = Stream(auth, MyListener(args.data_dir, args.query, db))
     twitter_stream.filter(languages=["en"], track=[args.query])
