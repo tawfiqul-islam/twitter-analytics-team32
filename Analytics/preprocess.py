@@ -55,7 +55,8 @@ def remove_duplicate(tweet):
         removed_tweet.append(token)
     return removed_tweet
 
-def process_tokens(terms_all, stop, punctuation, emojis, WORDS):
+def process_tokens(tweet, stop, punctuation, emojis, WORDS):
+    terms_all = [term for term in preprocess(tweet)]
     pos_string = '[:;=＝]+\s*-*\s*[oO]*[dD)pP\]]'
     neg_string = r'[:;=＝]+\s*-*\s*[oO]*[(/\\]*'
     pos_regex = re.compile(pos_string)

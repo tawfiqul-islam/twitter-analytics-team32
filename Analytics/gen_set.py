@@ -42,15 +42,11 @@ def gen_set(pos_1_set,
     polarity_tweet = []
     geo_codes = []
 
-    count = 0
 
     for doc_id in doc_ids:
         tweet = db[doc_id]
-        terms_all = [term for term in preprocess.preprocess(tweet['text'])]
-        filter_words = preprocess.process_tokens(terms_all, stop, punctuation, emojis, WORDS)
-        count += 1
-        if count % 10 == 0:
-            print(count)
+        filter_words = preprocess.process_tokens(tweet['text'], stop, punctuation, emojis, WORDS)
+
         if len(filter_words) > 1:
             #calculate_emoti_senti(tweet, pos_emoticon, neg_emoticon, pos, neg):
             count_positive, count_negative = create_sentiment.calculate_emoti_senti(filter_words,
