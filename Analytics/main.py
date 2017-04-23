@@ -19,25 +19,23 @@ import spell_checker
 import datetime
 import pickle
 from couchdb.mapping import Document, TextField, IntegerField, DateTimeField, BooleanField
-
-class TrainData(Document):
-	t_id = IntegerField()
-	text = TextField()
-	label = IntegerField()
-	features = TextField()
-	geo_code = TextField()
-	is_read = BooleanField()
+from data_obj import TrainData
+import configparser
 
 def main(argv):
-	# connect to db
-	couch = couchdb.Server('http://localhost:5984/')
-	if 'train_data' not in couch:
-		db = couch.create('train_data')
+
+	config = configparser.ConfigParser()
+	config.read(argv[1])
+	# connect to database
+	couch = couchdb.Server(config['Analytics']['couch_database'])
+
+	if config['Analytics']['train_data'] not in couch:
+		db_train = couch.create(config['Analytics']['train_data'])
 	else:
-		db = couch['train_data']
+		db_train = couch[config['Analytics']['train_data']]
 
 	# load model
-	file = open('lr_nectar.pkl', 'rb')
+	file = open(config['Analytics']['classifier'], 'rb')
 	lr = pickle.load(file)
 
 	re_read = True
@@ -54,10 +52,10 @@ def main(argv):
 
 		for doc_id in doc_ids:
 			tweet = db[doc_id]
-			if not tweet['is_read']:
+			if not tweet[config['Analytics']['obj_is_read']]:
 				temp_doc_ids.append(doc_id)
 				# tweet_id.append(tweet['t_id'])
-				train_features.append(tweet['features'])
+				train_features.append(tweet[config['Analytics']['obj_features']])
 				re_read = False
 
 		# if the data is not all predicted, it will predict and update back
@@ -67,8 +65,8 @@ def main(argv):
 
 			for i in range(len(temp_doc_ids)):
 				tweet = db.get(temp_doc_ids[i])
-				tweet['label'] = result[i]
-				tweet['is_read'] = True
+				tweet[config['Analytics']['obj_label']] = result[i]
+				tweet[config['Analytics']['obj_is_read']] = True
 				db[temp_doc_ids[i]] = tweet
 			re_read = True
 

@@ -31,22 +31,20 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
+from data_obj import TrainData
+import configparser
 
-class TrainData(Document):
-	t_id = IntegerField()
-	text = TextField()
-	label = IntegerField()
-	features = TextField()
-	geo_code = TextField()
-	is_read = BooleanField()
 
 def main(argv):
+	config = configparser.ConfigParser()
+	config.read(argv[1])
 	# connect to database
-	couch = couchdb.Server('http://localhost:5984/')
-	if 'train_data' not in couch:
-		db = couch.create('train_data')
+	couch = couchdb.Server(config['Analytics']['couch_database'])
+
+	if config['Analytics']['train_data'] not in couch:
+		db_train = couch.create(config['Analytics']['train_data'])
 	else:
-		db = couch['train_data']
+		db_train = couch[config['Analytics']['train_data']]
 
 	doc_ids = []
 	train_features = []
@@ -56,8 +54,8 @@ def main(argv):
 	    
 	for doc_id in doc_ids:
 		tweet = db[doc_id]
-		train_features.append(tweet['features'])
-		train_label.append(tweet['label'])
+		train_features.append(tweet[config['Analytics']['obj_features']])
+		train_label.append(tweet[config['Analytics']['obj_lebel']])
 
 	train_features = preprocess.format_couchdata(train_features)
 
@@ -74,14 +72,8 @@ def main(argv):
 	result = lr.predict(X_test)
 
 	# save model
-	with open('lr_nectar.pkl', 'wb') as file:
+	with open(config['Analytics']['classifier'], 'wb') as file:
     	pickle.dump(lr, file)
-
-	
-
-
-
-
 
 
 if __name__ == '__main__':

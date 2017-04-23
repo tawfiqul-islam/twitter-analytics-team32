@@ -55,6 +55,7 @@ def remove_duplicate(tweet):
         removed_tweet.append(token)
     return removed_tweet
 
+# use this to process tweets
 def process_tokens(tweet, stop, punctuation, emojis, WORDS):
     terms_all = [term for term in preprocess(tweet)]
     pos_string = '[:;=＝]+\s*-*\s*[oO]*[dD)pP\]]'
@@ -74,6 +75,8 @@ def process_tokens(tweet, stop, punctuation, emojis, WORDS):
     # use to correct the tokens
     filter_words = [word for word in filter_words if word is not None]
     return filter_words
+
+# combine this with below function, we can process string vectors from douchdb
 def multiple_replace(dict, text):
 
     regex = re.compile("(%s)" % "|".join(map(re.escape, dict.keys())))

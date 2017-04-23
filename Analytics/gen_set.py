@@ -20,6 +20,7 @@ def gen_set(pos_1_set,
     neg_1_set,
     afinn_dict,
     emojis,
+    WORDS,
     db,
     doc_ids):
 
@@ -32,7 +33,7 @@ def gen_set(pos_1_set,
 
     punctuation = list(string.punctuation)
     stop = stopwords.words('english')
-    WORDS = Counter(spell_checker.words(os.path.join('./Dict', "words_new.txt")))
+    
 
     # count # of pos neg neutral word determined by 4 dataset
     count_positive = 0
@@ -45,7 +46,7 @@ def gen_set(pos_1_set,
 
     for doc_id in doc_ids:
         tweet = db[doc_id]
-        filter_words = preprocess.process_tokens(tweet['text'], stop, punctuation, emojis, WORDS)
+        filter_words = preprocess.process_tokens(tweet[config['Analytics']['obj_text']], stop, punctuation, emojis, WORDS)
 
         if len(filter_words) > 1:
             #calculate_emoti_senti(tweet, pos_emoticon, neg_emoticon, pos, neg):
