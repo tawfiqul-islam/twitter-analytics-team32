@@ -1,10 +1,10 @@
-# To run this code, first edit config.py with your configuration, then:
+# To run this code, first edit config_gen.py with your configuration, then:
 #
-# mkdir data
-# python twitter_stream_download.py -q apple -d data
+# python[3] config_gen.py
+# python[3] twitter_stream.py
 # 
-# It will produce the list of tweets for the query "apple" 
-# in the file data/stream_apple.json
+# This will start streaming tweets within your specified bounding box
+# that will be kept in the couchDB database of your choice.
 
 import tweepy
 from tweepy import Stream
@@ -25,8 +25,6 @@ class MyListener(StreamListener):
 
             if 'text' in tweet:
                 if not tweet['retweeted'] and 'RT @' not in tweet:
-                    print(tweet['id_str'] + " yo it's my id ")
-                    #print(tweet)
                     tweet['_id'] = tweet['id_str']
                     db.save(tweet)
             return True
@@ -42,18 +40,20 @@ class MyListener(StreamListener):
 if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.ini')
-    auth = OAuthHandler(config['HarvestConfig']['ConsumerKey'], config['HarvestConfig']['ConsumerSecret'])
-    auth.set_access_token(config['HarvestConfig']['AccessToken'], config['HarvestConfig']['AccesTokenSecret'])
+
+    auth = OAuthHandler(config['Harvest']['ConsumerKey'], config['Harvest']['ConsumerSecret'])
+    auth.set_access_token(config['Harvest']['AccessToken'], config['Harvest']['AccesTokenSecret'])
     api = tweepy.API(auth)
-    couch = couchdb.Server( config['HarvestConfig']['DatabaseIP'])
-    if config['HarvestConfig']['DatabaseName'] not in couch:
-        db = couch.create(config['HarvestConfig']['DatabaseName'])
+    couch = couchdb.Server( config['Harvest']['DatabaseIP'])
+
+    if config['Harvest']['DatabaseName'] not in couch:
+        db = couch.create(config['Harvest']['DatabaseName'])
     else:
-        db = couch[config['HarvestConfig']['DatabaseName']]
+        db = couch[config['Harvest']['DatabaseName']]
         
     twitter_stream = Stream(auth, MyListener(db))
 
-    boundingbox = config['HarvestConfig']['Location']
+    boundingbox = config['Stream']['Location']
     boundingbox = boundingbox.split(',')
     loc1 = float(boundingbox[0])
     loc2 = float(boundingbox[1])
