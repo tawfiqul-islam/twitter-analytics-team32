@@ -1,0 +1,34 @@
+/* default font for body */
+body {
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+#mapid {
+	height: 500px;
+	width: 800px;
+}
+
+/* info at corner of the map */
+/* adapted from http://leafletjs.com/examples/choropleth/ */
+.area-info {
+	padding: 5px 10px 5px; /* top (right,left) bottom */
+	font-size: 14px;
+	background: rgba(255,255,255,0.8);
+	box-shadow: 0 0 15px rgba(0,0,0,0.2); /* h-shadow v-shadow blur-distance color */
+	border-radius: 5px;
+}
+.area-info h4 {
+	margin: 0 0 0px; /* top (right,left) bottom */
+	color: #6C7A89;
+}
+.area-info h5 {
+	margin: 2 0 -5px; /* top (right,left) bottom */
+	font-size: .9em;
+}
+.area-info p {
+	margin: 0 0 0px; /* top (right,left) bottom */
+	font-size: .85em;
+}
+
+
+/* #total-area-pie-chart svg { width: 500px; } */
