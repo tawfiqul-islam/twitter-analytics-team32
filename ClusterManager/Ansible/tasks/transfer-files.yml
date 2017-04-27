@@ -1,7 +1,20 @@
 - copy:
-    src: ../Scripts/test.sh
-    dest: /home/ubuntu/test.sh
+    src: ../CouchDB/configcouchdb.py
+    dest: /home/ubuntu/configcouchdb.py
     owner: ubuntu
     group: ubuntu
     mode: 0644
-- command: sh /home/ubuntu/test.sh
+- copy:
+    src: ../CouchDB/couchdb-main.sh
+    dest: /home/ubuntu/couchdb-main.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: 0644
+- copy:
+    src: ../CouchDB/install-couchdb.sh
+    dest: /home/ubuntu/install-couchdb.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: 0644
+    
+- command: sudo sh couchdb-main.sh
