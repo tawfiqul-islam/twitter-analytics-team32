@@ -15,11 +15,14 @@ FILENAME_LGA = 'vic-lga.json'
 # from aurin
 FILENAME_INTERNET_ACCESS = 'LGA11_Internet_Access_at_Home.json'
 
+# TODO delete
 # COUCHDB_URL = 'http://127.0.0.1:5984/'
 
 
 # TODO read from couchdb
 def read_lga_file(keep_unincorporated=False):
+    """ Preprocess lga name and combine coordinates of features with the same
+    lga name """
     with open(DATA_PATH + FILENAME_LGA) as f:
         lga_geojson_dict = json.load(f)
 
@@ -36,8 +39,6 @@ def read_lga_file(keep_unincorporated=False):
         lga_geojson_dict2[key] = value
     lga_geojson_dict2['features'] = []
 
-    # preprocess lga name and combine coordinates of features with the same
-    # lga name
     i = 0
     for feature in lga_geojson_dict['features']:
         curr_name = feature['properties']['vic_lga__3']
@@ -113,12 +114,39 @@ def merge_lga_code_and_polygons(lga_name_to_code_dict, lga_geojson_dict):
         lga_name = feature['properties']['lga_name']
         lga_dict[lga_name] = {}
         if lga_name in lga_name_to_code_dict:
-            lga_dict[lga_name]['lga_code'] = lga_name_to_code_dict[lga_name]
+            lga_code = lga_name_to_code_dict[lga_name]
         else:
             # code does not exist
-            lga_dict[lga_name]['lga_code'] = 0
+            lga_code = 0
+        lga_dict[lga_name]['lga_code'] = lga_code
+        feature['properties']['lga_code'] = lga_code
         lga_dict[lga_name]['shape'] = shape(feature['geometry'])
     return lga_dict
+
+
+def get_lga_geojson():
+    """ Combine coordinates with the same name and add lga code to each feature.
+    """
+    lga_geojson_dict, lga_list = read_lga_file()
+
+    lga_name_to_code_dict, lga_list_internet_access = read_internet_access()
+
+    diff = set(lga_list).symmetric_difference(set(lga_list_internet_access))
+    if (len(diff) != 0):
+        print('Error, lga name in "%s" and "%s" does not match' %
+              (FILENAME_LGA, FILENAME_INTERNET_ACCESS))
+        sys.exit(1)
+
+    # put lga code in each feature
+    for feature in lga_geojson_dict['features']:
+        lga_name = feature['properties']['lga_name']
+        if lga_name in lga_name_to_code_dict:
+            lga_code = lga_name_to_code_dict[lga_name]
+        else:
+            # code does not exist
+            lga_code = 0
+        feature['properties']['lga_code'] = lga_code
+    return lga_geojson_dict
 
 
 class LGA:

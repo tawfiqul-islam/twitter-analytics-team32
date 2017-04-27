@@ -1,8 +1,9 @@
 from flask import Flask
 from flask import render_template
 from flask import jsonify
-# from flask import Response
-from lga import read_lga_file
+from flask import Response
+from lga import get_lga_geojson
+import json
 
 
 # TODO config file
@@ -20,8 +21,11 @@ def index():
 @app.route('/data/vic-lga')
 def get_data():
     # return Response(data, status=200, mimetype='application/json')
-    preprocessed_lga_geojson, _ = read_lga_file()
-    return jsonify(preprocessed_lga_geojson)
+    lga_geojson = get_lga_geojson()
+    # return jsonify(lga_geojson)
+    # does not do any pretty print because
+    # it increases the json file to 3x the original
+    return Response(json.dumps(lga_geojson, separators=(',', ':')), status=200, mimetype='application/json')
 
 
 if __name__ == '__main__':

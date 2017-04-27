@@ -1,5 +1,7 @@
 /bin/
 *.swp
 *.pyc
+*.ini
 /static/lib/
 /static/resources/data/
+/.ropeproject/
