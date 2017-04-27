@@ -16,6 +16,14 @@ import couchdb
 
 
 if __name__ == '__main__':
+    #Read arguments and parse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-n', '--new', 
+        help='use to mean existing DB needs to be scraped for users', 
+        action='store_true')
+    args = parser.parse_args()
+
+    #Set up configuration
     config = configparser.ConfigParser()
     config.read('config.ini')
 
@@ -23,5 +31,7 @@ if __name__ == '__main__':
     auth.set_access_token(config['Harvest']['AccessToken'], config['Harvest']['AccesTokenSecret'])
     api = tweepy.API(auth)
     couch = couchdb.Server( config['Harvest']['DatabaseIP'])
+    databasename = config['Harvest']['DatabaseName']
+    userdatabase = databasename + 'user'
 
-    
+    #
