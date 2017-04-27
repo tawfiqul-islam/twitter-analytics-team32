@@ -10,7 +10,6 @@ import tweepy
 from tweepy import Stream
 from tweepy import OAuthHandler
 from tweepy.streaming import StreamListener
-import time
 import configparser
 import string
 import json
@@ -32,14 +31,18 @@ class MyListener(StreamListener):
         try:
             tweet = json.loads(data)
             #Ensure a tweet we are interested in then store in relevant DBs
-            if 'text' in tweet:
-                if not tweet['retweeted'] and 'RT @' not in tweet:
+            if tweet['text']:
+                if not tweet['retweeted'] and 'RT @' not in tweet['text']:
                     tweet['_id'] = tweet['id_str']
                     db.save(tweet)
+                #when keeping user data, store their ID and tweet location
                 if args.user and tweet['user']['id_str']:
-                    user_id = '{ "_id" : "' + tweet['user']['id_str'] + '" }'
-                    id_json = json.loads(user_id)
-                    userdb.save(id_json)
+                    user = {}
+                    user['_id'] = tweet['user']['id_str']
+                    user['geo'] = tweet['geo']
+                    user['coordinates'] = tweet['coordinates']
+                    user['place'] = tweet['place']
+                    userdb.save(user)
             return True
         except Exception as e:
             #Exception has occured, probably a collision of existing tweets, as expected

@@ -8,8 +8,11 @@ config['Harvest'] = { 'ConsumerKey' : 'eWUVGAAVPs0PH12jl8ZNm3V5A',
                       'DatabaseIP' : 'http://127.0.0.1:5984/',
                       'DatabaseName' : 'victoriastream'}
 
+#Note the order of the coords, bounding box from bottom left then top right
+#Longtitude then latitude pairs, comma seperated
 config['Stream'] = { 'Location' : '140.888036,-39.05559,150.525361,-34.196400'}
 
+#The name of the database upon which to crawl and search for more tweets
 config['UserSearch'] = { 'DatabaseCrawl' : 'victoriastream'}
 
 with open('config.ini', 'w') as configfile:
