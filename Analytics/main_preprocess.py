@@ -19,7 +19,7 @@ import spell_checker
 import datetime
 import pickle
 from couchdb.mapping import Document, TextField, IntegerField, DateTimeField, BooleanField
-from data_obj import TrainData
+from data_obj import TweetData
 import configparser
 
 
@@ -34,55 +34,42 @@ def main(argv):
 	else:
 		db = couch[config['Analytics']['row_data']]
 
-	# load dictionary
-	afinn_dict = load_dict.load_afinn(config['Analytics']['afinn_dict'])
-	emojis = load_dict.load_emoji(config['Analytics']['emojis_dict'])
-	pos_set, neg_set = load_dict.load_minging_dict(config['Analytics']['mining_dict_pos'], 
-														config['Analytics']['mining_dict_neg'])
-	WORDS = Counter(spell_checker.words(os.path.join('./Dict', config['Analytics']['words_new.txt'])))
-	
-
-	# get all documents' id
-	doc_ids = []
-	for id in db:
-		doc_ids.append(id)
-
-	# generate text and label training set
-	total_tweets, labels, ids, geo_codes = gen_set.gen_set(pos_set, 
-					                                    neg_set,
-					                                    afinn_dict,
-					                                    emojis,
-					                                    db,
-					                                    doc_ids)
-
-	# vectorise the features of training set
-	vectorizer = CountVectorizer(analyzer = "word",   
-	                             tokenizer = None,    
-	                             preprocessor = None, 
-	                             stop_words = None,   
-	                             max_features = 5000)
-
-	train_data_features = vectorizer.fit_transform(total_tweets)
-
-	# save the model
-	pickle.dump(vectorizer.vocabulary_,open(config['Analytics']['con_vec'],"wb"))
-	train_data_features = train_data_features.toarray().tolist()
-
-
 	# store the data of training set to another database
 	if config['Analytics']['train_data'] not in couch:
 		db_train = couch.create(config['Analytics']['train_data'])
 	else:
 		db_train = couch[config['Analytics']['train_data']]
 
-	for i in range(len(labels)):
-	    train_data = TrainData(t_id = ids[i],
-						    	text = total_tweets[i], 
-						    	label=labels[i], 
-						    	features=train_data_features[i],
-						    	geo_code = geo_codes[i],
-						    	is_read = False)
-	    train_data.store(db_train)
+	# load dictionary
+	afinn_dict = load_dict.load_afinn(config['Analytics']['afinn_dict'])
+	emojis = load_dict.load_emoji(config['Analytics']['emojis_dict'])
+	pos_set, neg_set = load_dict.load_minging_dict(config['Analytics']['mining_dict_pos'], 
+														config['Analytics']['mining_dict_neg'])
+	WORDS = Counter(spell_checker.words(os.path.join('./Dict', config['Analytics']['words_dict'])))
+	
+	while True:
+		# get all documents' id
+		doc_ids = []
+		for _id in db:
+			doc_ids.append(_id)
+
+		# generate text and label training set
+		gen_set.gen_set(pos_set, 
+		                neg_set,
+		                afinn_dict,
+		                emojis,
+		                WORDS,
+		                db,
+		                doc_ids,
+		                db_train,
+		                config)
+
+
+
+
+
+
+
 
 
 

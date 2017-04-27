@@ -19,7 +19,7 @@ import spell_checker
 import datetime
 import pickle
 from couchdb.mapping import Document, TextField, IntegerField, DateTimeField, BooleanField
-from data_obj import TrainData
+from data_obj import TweetData
 import configparser
 
 def main(argv):
@@ -30,9 +30,9 @@ def main(argv):
 	couch = couchdb.Server(config['Analytics']['couch_database'])
 
 	if config['Analytics']['train_data'] not in couch:
-		db_train = couch.create(config['Analytics']['train_data'])
+		db = couch.create(config['Analytics']['train_data'])
 	else:
-		db_train = couch[config['Analytics']['train_data']]
+		db = couch[config['Analytics']['train_data']]
 
 	# load model
 	file = open(config['Analytics']['classifier'], 'rb')

@@ -76,6 +76,18 @@ def process_tokens(tweet, stop, punctuation, emojis, WORDS):
     filter_words = [word for word in filter_words if word is not None]
     return filter_words
 
+# use this to process tweets
+def process_tokens_no_spell(tweet, stop, punctuation, emojis):
+    terms_all = [term for term in preprocess(tweet)]
+
+    filter_words = [word for word in terms_all if word not in stop and not word.startswith('http') and word not in punctuation]
+
+    filter_words = remove_duplicate(filter_words)
+
+    # use to correct the tokens
+    filter_words = [word for word in filter_words if word is not None]
+    return filter_words
+
 # combine this with below function, we can process string vectors from douchdb
 def multiple_replace(dict, text):
 

@@ -78,28 +78,21 @@ def calculate_minqing_senti(tweet, pos_minging, neg_minging, pos, neg):
     return pos, neg
 
 
-def create_training_set(tweet, train_data, train_label, id, ids, geo_code, geo_codes, pos, neg):
-    p_or_n = 0
-
-    if pos >= 2 and pos>neg:
-        p_or_n = 1
-        train_label.append(p_or_n)
-        each_tweet = ' '.join(tweet)
-        train_data.append(each_tweet)
-        ids.append(id)
-        geo_codes.append(geo_code)
-    elif neg >= 2 and pos < neg:
-        p_or_n = -1
-        train_label.append(p_or_n)
-        each_tweet = ' '.join(tweet)
-        train_data.append(each_tweet)
-        ids.append(id)
-        geo_codes.append(geo_code)
-    return pos, neg, train_data, train_label, ids, geo_codes
-
 
 def create_data(tweet, tweets):
     each_tweet = ' '.join(tweet)
     tweets.append(tweet)
 
     return tweets
+
+def total_sentiment(pos, neg):
+    if pos >= 2 and pos>neg:
+        p_or_n = 1
+        return p_or_n
+    elif neg >= 2 and pos < neg:
+        p_or_n = -1
+        return p_or_n
+    elif pos == 0 and neg == 0:
+        p_or_n = 0
+        return p_or_n
+    return 5
