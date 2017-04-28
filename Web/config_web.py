@@ -26,6 +26,25 @@ def main():
                                   'soft_drink': DATA_PATH + 'LGA_Daily_soft_drink_consumption.json',
                                   'health_risk': DATA_PATH + 'LGA11_Health_Risk_Factors_-_Modelled_Estimate.json'}
 
+    config['aurin_columns'] = {'internet_access': {'columns': [['internet_tt_3_percent_6_11_6_11', 'Percentage of Private Dwellings with Internet Connections']],
+                                                   'actions': [['group', 3]]},
+                               'sitting_hours': {'columns': [['significance', "Proportion of People Who Sit for 7 Hours or More per Day Relative to Victoria's Average"]],
+                                                 'actions': [['relabel', {'better': 'low',
+                                                                          'none': 'medium',
+                                                                          'worse': 'high'}]]},
+                               'soft_drink': {'columns': [['significance', "Soft Drink Consumption Relative to Victoria's Average"]],
+                                              'actions': [['relabel', {'caution': 'low',
+                                                                       'better': 'low',
+                                                                       'none': 'medium',
+                                                                       'worse': 'high'}]]},
+                               'health_risk': {'columns': [['smokers_me_2_rate_3_11_7_13', 'Percentage of Current smokers (modelled estimate)'],
+                                                           ['obese_p_me_2_rate_3_11_7_13', 'Percentage of Obese Persons (modelled estimate)'],
+                                                           ['alcohol_cons_2_rate_3_11_7_13', 'Percentage of High Risk Alcohol Consumption (modelled estimate)']],
+                                               'actions': [['group', 3], ['group', 3], ['group', 3]]}}
+
+    config['aurin_preprocessing'] = {'decimal_places': 2,
+                                     'accurate_to': 0.01}
+
     with open('config_web.ini', 'w') as configfile:
         config.write(configfile)
 
