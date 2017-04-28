@@ -25,7 +25,8 @@ def gen_set(pos_1_set,
     db,
     doc_ids,
     db_train,
-    config):
+    config,
+    couch):
 
     #########
     ### create the bag of words
@@ -96,7 +97,12 @@ def gen_set(pos_1_set,
                             features = "",
                             geo_code = geo_info,
                             is_read = False)
-                    target_tweet.store(db_train)
+                    try:
+                        target_tweet.store(db_train)
+                    except couchdb.http.ResourceConflict:
+                        pass
+
+
 
                     tweet[config['Analytics']['obj_has_processed']] = True
                     db[doc_id] = tweet

@@ -3,9 +3,9 @@ import configparser
 def config_parser():
 	config = configparser.ConfigParser()
 
-	config['Analytics'] = { 'couch_database' : 'http://localhost:5984/',
-		'train_data' : 'db_train',
-		'row_data' : 'sentiment',
+	config['Analytics'] = { 'couch_database' : 'http://115.146.92.171:5984/',
+		'train_data' : 'train_data',
+		'row_data' : 'row_data',
 		'afinn_dict' : 'AFINN-111.txt',
 		'emojis_dict' : 'emojis.txt',
 		'mining_dict_pos' : 'positive-words.txt',

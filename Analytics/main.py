@@ -26,16 +26,25 @@ def main(argv):
 
 	config = configparser.ConfigParser()
 	config.read(argv[1])
-	# connect to database
-	couch = couchdb.Server(config['Analytics']['couch_database'])
 
-	if config['Analytics']['train_data'] not in couch:
-		db = couch.create(config['Analytics']['train_data'])
+	couch_ip = config['Analytics']['couch_database']
+	couch_db_train_data = config['Analytics']['train_data']
+	classifier_file_name = config['Analytics']['classifier']
+	tweet_is_read = config['Analytics']['obj_is_read']
+	tweet_features = config['Analytics']['obj_features']
+	tweet_label = config['Analytics']['obj_label']
+	read = "rb"
+
+	# connect to database
+	couch = couchdb.Server(couch_ip)
+
+	if couch_db_train_data not in couch:
+		db = couch.create(couch_db_train_data)
 	else:
-		db = couch[config['Analytics']['train_data']]
+		db = couch[couch_db_train_data]
 
 	# load model
-	file = open(config['Analytics']['classifier'], 'rb')
+	file = open(classifier_file_name, read)
 	lr = pickle.load(file)
 
 	re_read = True
@@ -52,10 +61,10 @@ def main(argv):
 
 		for doc_id in doc_ids:
 			tweet = db[doc_id]
-			if not tweet[config['Analytics']['obj_is_read']]:
+			if not tweet[tweet_is_read]:
 				temp_doc_ids.append(doc_id)
 				# tweet_id.append(tweet['t_id'])
-				train_features.append(tweet[config['Analytics']['obj_features']])
+				train_features.append(tweet[tweet_features])
 				re_read = False
 
 		# if the data is not all predicted, it will predict and update back
@@ -65,8 +74,8 @@ def main(argv):
 
 			for i in range(len(temp_doc_ids)):
 				tweet = db.get(temp_doc_ids[i])
-				tweet[config['Analytics']['obj_label']] = result[i]
-				tweet[config['Analytics']['obj_is_read']] = True
+				tweet[tweet_label] = result[i]
+				tweet[tweet_is_read] = True
 				db[temp_doc_ids[i]] = tweet
 			re_read = True
 
