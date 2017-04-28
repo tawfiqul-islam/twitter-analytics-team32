@@ -1,3 +1,8 @@
+# To run this code, first edit config_gen.py with your configuration, then:
+#
+# python[3] config_gen.py
+# python[3] twitter_user_search.py
+#
 # Given a database name (say, x) this will assume an existing database of just userIDs
 # at "x + user" exists which this will search for past tweets and save back into x
 #
@@ -20,10 +25,25 @@ import json
 import couchdb
 import argparse
 
+#Crawl existing db and make a list of its users
+def add_users(db):
+    for tweetID in db:
+                tweet = db[tweetID]
+                try:
+                    user = {}
+                    user['_id'] = tweet['user']['id_str']
+                    user['geo'] = tweet['geo']
+                    user['coordinates'] = tweet['coordinates']
+                    user['place'] = tweet['place']
+                    userdb.save(user)
+                except Exception as e:
+                    print(e)
+                    pass
 
 #Find user's past tweets based on ID and store in given database
 def add_tweets(userID, userdb, db, args):
     status_list = api.user_timeline(userID)
+    doc = userdb[userID]
     for status in status_list:
         tweet = status._json
         try:
@@ -31,15 +51,20 @@ def add_tweets(userID, userdb, db, args):
                 if not tweet['retweeted'] and 'RT @' not in tweet['text']:
                     if not tweet['geo'] and not tweet['coordinates'] and not tweet['place']:
                         #this means the tweet found has no location, so assume same as previous
-                        tweet['geo'] = userdb[userID]['geo']
-                        tweet['coordinates'] = userdb[userID]['coordinates']
-                        tweet['place'] = userdb[userID]['place']
+                        tweet['geo'] = doc['geo']
+                        tweet['coordinates'] = doc['coordinates']
+                        tweet['place'] = doc['place']
+                    tweet['_id'] = tweet['id_str']
                     db.save(tweet)
                     if args.delete:
-                        #delete unless keep argument used
-                        userdb.delete(userID)
-        except Exception as e:
-            print(e)
+                        #if delete option is activated remove IDs from userdb 
+                        #possibly to avoid re-searching in future
+                        userdb.delete(doc)
+        except couchdb.http.ResourceConflict as e:
+            #Collisions are expected, move on
+            pass
+        except couchdb.http.ResourceNotFound as e:
+            #Deletes may need time to catch up
             pass
 
 
@@ -77,18 +102,9 @@ if __name__ == '__main__':
     else:
         userdb = couch[userdatabase]
 
+    #if option enabled, make a userid db first
     if args.new:
-        for tweet in db:
-            try:
-                user = {}
-                user['_id'] = db[tweet]['user']['id_str']
-                user['geo'] = db[tweet]['geo']
-                user['coordinates'] = db[tweet]['coordinates']
-                user['place'] = db[tweet]['place']
-                userdb.save(user)
-            except Exception as e:
-                print(e)
-                pass
+        add_users(db)
 
-    for user in userdb:
-        add_tweets(user,userdb,db,args)
+    for userID in userdb:
+        add_tweets(userID,userdb,db,args)

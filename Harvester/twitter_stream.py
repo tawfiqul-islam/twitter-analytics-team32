@@ -44,9 +44,8 @@ class MyListener(StreamListener):
                     user['place'] = tweet['place']
                     userdb.save(user)
             return True
-        except Exception as e:
-            #Exception has occured, probably a collision of existing tweets, as expected
-            print(e)
+        except couchdb.http.ResourceConflict as e:
+            #Collisions are expected, move on
             pass
         return True
 
