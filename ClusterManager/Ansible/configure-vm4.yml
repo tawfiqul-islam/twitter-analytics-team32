@@ -1,0 +1,7 @@
+---
+- hosts: vm4
+  remote_user: ubuntu
+  sudo: yes
+
+  tasks:
+    - include: tasks/transfer-files4.yml

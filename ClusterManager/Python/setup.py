@@ -9,6 +9,7 @@ vmList=[];
 volumeList=[];
 #reading configurations
 config = ConfigParser.ConfigParser()
+config2 = ConfigParser.ConfigParser()
 config.read("config.ini")
 AWS_ACCESS_KEY = config.get('cluster', 'AWS_ACCESS_KEY')
 AWS_SECRET_KEY = config.get('cluster', 'AWS_SECRET_KEY')
@@ -55,8 +56,14 @@ def startUpVM(ec2_conn):
                 ins.update()
             print 'instance ', i , ' id:', ins.id
             vmList.append(ins.id)
-            f.write('[vm'+str(i)+']\n')
+            f.write('[vm'+str(i+1)+']\n')
             f.write(ins.private_ip_address+'\n')
+            if(i==0):
+                dburlStr="http://"+ins.private_ip_address+":5984/"
+            config2.read('../Harvester/vm'+str(i+1)+'/config.ini')
+            config2.set('HarvestConfig', 'databaseip', dburlStr)
+            with open('../Harvester/vm'+str(i+1)+'/config.ini', 'wb') as configfile:
+                config2.write(configfile)
             i=i+1   
     f.close() 
     return;
@@ -95,17 +102,18 @@ def deleteVolume(ec2_conn):
 
 def main():
     ec2_conn=connect()
-    if(VM_TERMINATE=="true"):
-        terminateVM(ec2_conn)
-    if(VOLUME_DELETE=="true"):
-        deleteVolume(ec2_conn)
+    #===========================================================================
+    # if(VM_TERMINATE=="true"):
+    #     terminateVM(ec2_conn)
+    # if(VOLUME_DELETE=="true"):
+    #    deleteVolume(ec2_conn)
+    #===========================================================================
     if(VM_CREATE=="true"):
         createVM(ec2_conn)
     if(VOLUME_CREATE=="true"):
         createVolume(ec2_conn)
     if(VOLUME_ATTACH=="true"):    
         attachVolume(ec2_conn)
-
     return;
     
 main();

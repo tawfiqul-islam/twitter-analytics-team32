@@ -18,6 +18,8 @@ sudo pip install tweepy
 
 sudo pip install jsonpickle
 
+sudo pip install configparser
+
 sudo sh install-couchdb.sh
 
 #### configuing couchdb 

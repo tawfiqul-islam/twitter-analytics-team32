@@ -1,0 +1,17 @@
+    
+- copy:
+    src: ../CouchDB/couchdb-main.sh
+    dest: /home/ubuntu/couchdb-main.sh
+    owner: ubuntu
+    group: ubuntu
+    directory_mode
+    mode: 0644
+- copy:
+    src: ../CouchDB/install-couchdb.sh
+    dest: /home/ubuntu/install-couchdb.sh
+    owner: ubuntu
+    group: ubuntu
+    mode: 0644
+    
+- command: sudo sh couchdb-main.sh
+
