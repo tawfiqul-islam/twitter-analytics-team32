@@ -27,24 +27,24 @@ def main(argv):
 	config = configparser.ConfigParser()
 	config.read(argv[1])
 
-	couch_ip = config['Analytics']['couch_database']
-	couch_db_train_data = config['Analytics']['train_data']
-	classifier_file_name = config['Analytics']['classifier']
-	tweet_is_read = config['Analytics']['obj_is_read']
-	tweet_features = config['Analytics']['obj_features']
-	tweet_label = config['Analytics']['obj_label']
-	read = "rb"
+	COUCH_IP = config['Analytics']['couch_database']
+	COUCH_DB_TRAIN_DATA = config['Analytics']['train_data']
+	CLASSIFIER_FILE_NAME = config['Analytics']['classifier']
+	TWEET_IS_READ = config['Analytics']['obj_is_read']
+	TWEET_FEATURES = config['Analytics']['obj_features']
+	TWEET_LABEL = config['Analytics']['obj_label']
+	READ = "rb"
 
 	# connect to database
-	couch = couchdb.Server(couch_ip)
+	couch = couchdb.Server(COUCH_IP)
 
-	if couch_db_train_data not in couch:
-		db = couch.create(couch_db_train_data)
+	if COUCH_DB_TRAIN_DATA not in couch:
+		db = couch.create(COUCH_DB_TRAIN_DATA)
 	else:
-		db = couch[couch_db_train_data]
+		db = couch[COUCH_DB_TRAIN_DATA]
 
 	# load model
-	file = open(classifier_file_name, read)
+	file = open(CLASSIFIER_FILE_NAME, READ)
 	lr = pickle.load(file)
 
 	re_read = True
@@ -61,10 +61,10 @@ def main(argv):
 
 		for doc_id in doc_ids:
 			tweet = db[doc_id]
-			if not tweet[tweet_is_read]:
+			if not tweet[TWEET_IS_READ]:
 				temp_doc_ids.append(doc_id)
 				# tweet_id.append(tweet['t_id'])
-				train_features.append(tweet[tweet_features])
+				train_features.append(tweet[TWEET_FEATURES])
 				re_read = False
 
 		# if the data is not all predicted, it will predict and update back
@@ -74,8 +74,8 @@ def main(argv):
 
 			for i in range(len(temp_doc_ids)):
 				tweet = db.get(temp_doc_ids[i])
-				tweet[tweet_label] = result[i]
-				tweet[tweet_is_read] = True
+				tweet[TWEET_LABEL] = result[i]
+				tweet[TWEET_IS_READ] = True
 				db[temp_doc_ids[i]] = tweet
 			re_read = True
 

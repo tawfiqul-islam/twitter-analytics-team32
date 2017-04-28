@@ -28,15 +28,24 @@ def gen_set(pos_1_set,
     config,
     couch):
 
+    NLTK_STOPWORDS = 'stopwords'
+    NLTK_ENGLISH = 'english'
+    TWEET_HAS_PROCESSED = config['Analytics']['obj_has_processed']
+    TWEET_TEXT = config['Analytics']['obj_text']
+    ID_STR = 'id_str'
+    NONE = ""
+    COORDINATES = 'coordinates'
+    PLACE = 'place'
+
     #########
     ### create the bag of words
     #########
 
     count_all = Counter()
-    nltk.download('stopwords')
+    nltk.download(NLTK_STOPWORDS)
 
     punctuation = list(string.punctuation)
-    stop = stopwords.words('english')
+    stop = stopwords.words(NLTK_ENGLISH)
     
 
     # count # of pos neg neutral word determined by 4 dataset
@@ -51,9 +60,9 @@ def gen_set(pos_1_set,
 
     for doc_id in doc_ids:
         tweet = db[doc_id]
-        if not tweet[config['Analytics']['obj_has_processed']]:
-            filter_words = preprocess.process_tokens(tweet[config['Analytics']['obj_text']], stop, punctuation, emojis, WORDS)
-            no_spell = preprocess.process_tokens_no_spell(tweet[config['Analytics']['obj_text']], stop, punctuation, emojis)
+        if not tweet[TWEET_HAS_PROCESSED]:
+            filter_words = preprocess.process_tokens(tweet[TWEET_TEXT], stop, punctuation, emojis, WORDS)
+            no_spell = preprocess.process_tokens_no_spell(tweet[TWEET_TEXT], stop, punctuation, emojis)
 
             if len(filter_words) > 1:
                 #calculate_emoti_senti(tweet, pos_emoticon, neg_emoticon, pos, neg):
@@ -83,18 +92,18 @@ def gen_set(pos_1_set,
 
 
                 temp_text = create_data(filter_words)
-                geo_info = gen_geo_info(tweet)
+                geo_info = gen_geo_info(tweet, COORDINATES, PLACE)
 
                 cur_senti = create_sentiment.total_sentiment(count_positive, count_negative)
                 if cur_senti != 5:
                     target_tweet = TweetData(
-                            _id = tweet['id_str'],
-                            original_text = tweet['text'],
+                            _id = tweet[ID_STR],
+                            original_text = tweet[TWEET_TEXT],
                             text = temp_text,
                             no_spell_text = no_spell,
                             label = cur_senti,
-                            tfid_features = "",
-                            features = "",
+                            tfid_features = NONE,
+                            features = NONE,
                             geo_code = geo_info,
                             is_read = False)
                     try:
@@ -104,7 +113,7 @@ def gen_set(pos_1_set,
 
 
 
-                    tweet[config['Analytics']['obj_has_processed']] = True
+                    tweet[TWEET_HAS_PROCESSED] = True
                     db[doc_id] = tweet
 
 
@@ -140,17 +149,17 @@ def gen_train(train_data, train_label, number):
             rest_Y.append(train_label[i])
     return new_trainX, new_trainY, rest_X, rest_Y
 
-def gen_geo_info(tweet):
-    if tweet['place'] and not tweet['coordinates']:
-        geo_info = tweet['place']
-    elif tweet['coordinates'] and not tweet['place']:
-        if 'coordinates' in  tweet['coordinates']:
-            print(tweet['coordinates'])
-            geo_info = tweet['coordinates']['coordinates']
-    elif not tweet['place'] and not tweet['coordinates']:
+def gen_geo_info(tweet, COORDINATES, PLACE):
+    if tweet['place'] and not tweet[COORDINATES]:
+        geo_info = tweet[PLACE]
+    elif tweet[COORDINATES] and not tweet[PLACE]:
+        if COORDINATES in  tweet[COORDINATES]:
+            print(tweet[COORDINATES])
+            geo_info = tweet[COORDINATES][COORDINATES]
+    elif not tweet[PLACE] and not tweet[COORDINATES]:
         geo_info = None
     else:
-        geo_info = tweet['place']
+        geo_info = tweet[PLACE]
 
     return geo_info
 

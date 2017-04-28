@@ -28,36 +28,36 @@ def main(argv):
 	config = configparser.ConfigParser()
 	config.read(argv[1])
 
-	couch_ip = config['Analytics']['couch_database']
-	couch_db_train_data = config['Analytics']['train_data']
-	couch_db_row_data = config['Analytics']['row_data']
-	afinn_file = config['Analytics']['afinn_dict']
-	emoji_file = config['Analytics']['emojis_dict']
-	ming_pos_file = config['Analytics']['mining_dict_pos']
-	ming_neg_file = config['Analytics']['mining_dict_neg']
-	dict_dir = './Dict'
-	words_file = config['Analytics']['words_dict']
+	COUCH_IP = config['Analytics']['couch_database']
+	COUCH_DB_TRAIN_DATA = config['Analytics']['train_data']
+	COUCH_DB_ROW_DATA = config['Analytics']['row_data']
+	AFINN_FILE = config['Analytics']['afinn_dict']
+	EMOJI_FILE = config['Analytics']['emojis_dict']
+	MING_POS_FILE = config['Analytics']['mining_dict_pos']
+	MING_NEG_FILE = config['Analytics']['mining_dict_neg']
+	DICT_DIR = './Dict'
+	WORDS_FILE = config['Analytics']['words_dict']
 
 	# connect to database
-	couch = couchdb.Server(couch_ip)
+	couch = couchdb.Server(COUCH_IP)
 
-	if couch_db_row_data not in couch:
-		db = couch.create(couch_db_row_data)
+	if COUCH_DB_ROW_DATA not in couch:
+		db = couch.create(COUCH_DB_ROW_DATA)
 	else:
-		db = couch[couch_db_row_data]
+		db = couch[COUCH_DB_ROW_DATA]
 
 	# store the data of training set to another database
-	if couch_db_train_data not in couch:
-		db_train = couch.create(couch_db_train_data)
+	if COUCH_DB_TRAIN_DATA not in couch:
+		db_train = couch.create(COUCH_DB_TRAIN_DATA)
 	else:
-		db_train = couch[couch_db_train_data]
+		db_train = couch[COUCH_DB_TRAIN_DATA]
 
 	# load dictionary
-	afinn_dict = load_dict.load_afinn(afinn_file)
-	emojis = load_dict.load_emoji(emoji_file)
-	pos_set, neg_set = load_dict.load_minging_dict(ming_pos_file, 
-													ming_neg_file)
-	WORDS = Counter(spell_checker.words(os.path.join(dict_dir, words_file)))
+	afinn_dict = load_dict.load_afinn(DICT_DIR, AFINN_FILE)
+	emojis = load_dict.load_emoji(DICT_DIR, EMOJI_FILE)
+	pos_set, neg_set = load_dict.load_minging_dict(DICT_DIR, MING_POS_FILE, 
+													MING_NEG_FILE)
+	WORDS = Counter(spell_checker.words(os.path.join(DICT_DIR, WORDS_FILE)))
 	
 	while True:
 		# get all documents' id

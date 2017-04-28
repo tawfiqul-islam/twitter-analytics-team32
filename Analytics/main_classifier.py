@@ -40,26 +40,27 @@ def main(argv):
 	config = configparser.ConfigParser()
 	config.read(argv[1])
 
-	couch_ip = config['Analytics']['couch_database']
-	couch_db_train_data = config['Analytics']['train_data']
-	couch_db_row_data = config['Analytics']['row_data']
-	tweet_text = config['Analytics']['obj_text']
-	tweet_label = config['Analytics']['obj_label']
-	tfid_file = config['Analytics']['tfid_con_vec']
-	counter_file = config['Analytics']['con_vec']
-	tfid_classifier_file = config['Analytics']['classifier_tfid']
-	counter_classifier_file = config['Analytics']['classifier']
-	write = 'wb'
+	COUCH_IP = config['Analytics']['couch_database']
+	COUCH_DB_TRAIN_DATA = config['Analytics']['train_data']
+	COUCH_DB_ROW_DATA = config['Analytics']['row_data']
+	TWEET_TEXT = config['Analytics']['obj_text']
+	TWEET_LABEL = config['Analytics']['obj_label']
+	TFID_FILE = config['Analytics']['tfid_con_vec']
+	COUNTER_FILE = config['Analytics']['con_vec']
+	TFID_CLASSIFIER_FILE = config['Analytics']['classifier_tfid']
+	COUNTER_CLASSIFIER_FILE = config['Analytics']['classifier']
+	WRITE = 'wb'
+	WORD_LEVEL = 'word'
 
 
 	# connect to database
-	couch = couchdb.Server(couch_ip)
+	couch = couchdb.Server(COUCH_IP)
 
 
-	if couch_db_train_data not in couch:
-		db = couch.create(couch_db_train_data)
+	if COUCH_DB_TRAIN_DATA not in couch:
+		db = couch.create(COUCH_DB_TRAIN_DATA)
 	else:
-		db = couch[couch_db_train_data]
+		db = couch[COUCH_DB_TRAIN_DATA]
 
 	doc_ids = []
 	train_features = []
@@ -69,8 +70,8 @@ def main(argv):
 	    
 	for doc_id in doc_ids:
 		tweet = db[doc_id]
-		train_features.append(tweet[tweet_text])
-		train_label.append(tweet[tweet_label])
+		train_features.append(tweet[TWEET_TEXT])
+		train_label.append(tweet[TWEET_LABEL])
 
 	# get best 5000 vocabulary from 7000
 	vectorizer = TfidfVectorizer(sublinear_tf = True, max_df = 0.5, max_features = 700)
@@ -82,10 +83,10 @@ def main(argv):
 	# save the model
 	vectorizer = TfidfVectorizer(sublinear_tf = True, max_df = 0.5, vocabulary = voc)
 	X_train_features_tfid = vectorizer.fit_transform(train_features)
-	pickle.dump(vectorizer.vocabulary_,open(tfid_file, write))
-	vectorizer = CountVectorizer(analyzer = "word", vocabulary = voc)
+	pickle.dump(vectorizer.vocabulary_,open(TFID_FILE, WRITE))
+	vectorizer = CountVectorizer(analyzer = WORD_LEVEL, vocabulary = voc)
 	X_train_features = vectorizer.fit_transform(train_features)
-	pickle.dump(vectorizer.vocabulary_,open(counter_file, write))
+	pickle.dump(vectorizer.vocabulary_,open(COUNTER_FILE, WRITE))
 
 	X_train_features = X_train_features.toarray()
 	X_train_features_tfid = X_train_features_tfid.toarray()
@@ -105,7 +106,7 @@ def main(argv):
 	result = lr.predict(X_test)
 
 	# save model
-	with open(counter_classifier_file, write) as file:
+	with open(COUNTER_CLASSIFIER_FILE, WRITE) as file:
 		pickle.dump(lr, file)
 	file.close()
 
@@ -124,7 +125,7 @@ def main(argv):
 	result = lr.predict(X_test)
 
 	# save model
-	with open(tfid_classifier_file, write) as file:
+	with open(TFID_CLASSIFIER_FILE, WRITE) as file:
 		pickle.dump(lr, file)
 	file.close()
 
