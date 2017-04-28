@@ -42,8 +42,14 @@ def add_users(db):
 
 #Find user's past tweets based on ID and store in given database
 def add_tweets(userID, userdb, db, args):
-    status_list = api.user_timeline(userID)
     doc = userdb[userID]
+    try:
+        status_list = api.user_timeline(userID)
+    except tweepy.error.TweepError as e:
+        #some users will not allow their timelines viewed or have been deleted
+        #remove as not useful
+        userdb.delete(doc)
+        return
     for status in status_list:
         tweet = status._json
         try:
