@@ -1,51 +1,35 @@
-# To run this code, first edit config_gen.py with your configuration, then:
+# To run this code, first edit config.py with your configuration, then:
 #
-# python[3] config_gen.py
-# python[3] twitter_stream.py
+# mkdir data
+# python twitter_stream_download.py -q apple -d data
 # 
-# This will start streaming tweets within your specified bounding box
-# that will be kept in the couchDB database of your choice.
+# It will produce the list of tweets for the query "apple" 
+# in the file data/stream_apple.json
 
 import tweepy
 from tweepy import Stream
 from tweepy import OAuthHandler
 from tweepy.streaming import StreamListener
+import time
 import configparser
 import string
 import json
 import couchdb
-import argparse
 
 
 class MyListener(StreamListener):
-    #Custom StreamListener for streaming data
-    def __init__(self,db,userdb=None,args=None):
-        self.db = db
-        if userdb:
-            self.userdb = userdb
-        if args:
-            self.args = args
-
-    #When receiving a tweet
+    """Custom StreamListener for streaming data."""
     def on_data(self, data):
         try:
             tweet = json.loads(data)
-            #Ensure a tweet we are interested in then store in relevant DBs
-            if tweet['text']:
-                if not tweet['retweeted'] and 'RT @' not in tweet['text']:
+
+            if 'text' in tweet:
+                if not tweet['retweeted'] and 'RT @' not in tweet:
                     tweet['_id'] = tweet['id_str']
+                    tweet['harvesterType'] = 'BoundingBoxStream'
                     db.save(tweet)
-                #when keeping user data, store their ID and tweet location
-                if args.user and tweet['user']['id_str']:
-                    user = {}
-                    user['_id'] = tweet['user']['id_str']
-                    user['geo'] = tweet['geo']
-                    user['coordinates'] = tweet['coordinates']
-                    user['place'] = tweet['place']
-                    userdb.save(user)
             return True
         except Exception as e:
-            #Exception has occured, probably a collision of existing tweets, as expected
             print(e)
             pass
         return True
@@ -55,46 +39,33 @@ class MyListener(StreamListener):
         return True
 
 if __name__ == '__main__':
-    #Read arguments and parse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-u', '--user', 
-        help='keep track of any user ids and store in <dbname>user', 
-        action='store_true')
-    args = parser.parse_args()
-
-    #Set up configuration
     config = configparser.ConfigParser()
+
+    # Read the Config File
+
     config.read('config.ini')
+    consumerKey = config['HarvestConfig']['ConsumerKey']
+    consumerSecret = config['HarvestConfig']['ConsumerSecret']
+    accessToken = config['HarvestConfig']['AccessToken']
+    accessTokenSecret = config['HarvestConfig']['AccesTokenSecret']
+    auth = OAuthHandler( consumerKey, consumerSecret)
+    auth.set_access_token( accessToken, accessTokenSecret )
 
-    auth = OAuthHandler(config['Harvest']['ConsumerKey'], config['Harvest']['ConsumerSecret'])
-    auth.set_access_token(config['Harvest']['AccessToken'], config['Harvest']['AccesTokenSecret'])
     api = tweepy.API(auth)
-    couch = couchdb.Server( config['Harvest']['DatabaseIP'])
-    databasename = config['Harvest']['DatabaseName']
-    userdatabase = databasename + 'user'
-
-    #Open up our couchdb database
-    if databasename not in couch:
-        db = couch.create(databasename)
+    databaseIP = config['HarvestConfig']['DatabaseIP']
+    databaseName = config['HarvestConfig']['DatabaseName']
+    couch = couchdb.Server(databaseIP)
+    if  databaseName not in couch:
+    	db = couch.create(databaseName)
     else:
-        db = couch[databasename]
+    	db = couch[databaseName]
+    twitter_stream = Stream(auth, MyListener(db))
 
-    if args.user:
-        if userdatabase not in couch:
-            userdb = couch.create(userdatabase)
-        else:
-            userdb = couch[userdatabase]
-        twitter_stream = Stream(auth, MyListener(db=db,args=args,userdb=userdb))
-    else:
-        twitter_stream = Stream(auth, MyListener(db=db))
-
-    #This is the bounding box within which we want tweets
-    boundingbox = config['Stream']['Location']
+    boundingbox = config['HarvestConfig']['Location']
     boundingbox = boundingbox.split(',')
     loc1 = float(boundingbox[0])
     loc2 = float(boundingbox[1])
     loc3 = float(boundingbox[2])
     loc4 = float(boundingbox[3])
 
-    #Set up the stream
     twitter_stream.filter(languages=["en"], locations=[loc1,loc2,loc3,loc4])
