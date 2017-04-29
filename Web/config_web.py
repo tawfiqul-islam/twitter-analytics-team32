@@ -12,6 +12,24 @@ VIEW_GEOJSON_MAP = \
         }
     '''
 
+VIEW_AURIN_ALL_MAP = \
+    '''function (doc) {
+        if (doc.lga_code == 0) {
+            // skip these
+            return
+        }
+        var v;
+        if (doc.doc_type == 'lga_geojson_feature') {
+            // only want LGA name
+            v = {'lga_name': doc.columns.properties.lga_name};
+        } else {
+            // use all
+            v = doc.columns;
+        }
+        emit([doc.lga_code, doc.doc_type], v);
+        }
+    '''
+
 
 def main():
     if (len(sys.argv) != 2):
@@ -26,9 +44,13 @@ def main():
                          'ip_address': ip_address,
                          'db_name_aurin': 'aurin',
                          'key': 'lga_code',
+                         'exclude_lga_code': [29399],
                          'view_geojson': {'docid': '_design/lga',
                                           'view_name': 'features-view',
-                                          'map_func': VIEW_GEOJSON_MAP}}
+                                          'map_func': VIEW_GEOJSON_MAP},
+                         'view_aurin_all': {'docid': '_design/aurin_all',
+                                            'view_name': 'collation-view',
+                                            'map_func': VIEW_AURIN_ALL_MAP}}
 
     config['geojson_file'] = {'lga': DATA_PATH + 'vic-lga.json',
                               'doc_type': 'lga_geojson_feature'}
@@ -54,8 +76,7 @@ def main():
                                                            ['alcohol_cons_2_rate_3_11_7_13', 'Percentage of High Risk Alcohol Consumption (modelled estimate)']],
                                                'actions': [['group', 3], ['group', 3], ['group', 3]]}}
 
-    config['aurin_preprocessing'] = {'decimal_places': 2,
-                                     'accurate_to': 0.01}
+    config['aurin_preprocessing'] = {'decimal_places': 2}
 
     with open('config_web.ini', 'w') as configfile:
         config.write(configfile)

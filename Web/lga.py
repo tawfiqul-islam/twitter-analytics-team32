@@ -51,11 +51,7 @@ def read_lga_file(keep_unincorporated=False):
 
     i = 0
     for feature in lga_geojson_dict['features']:
-        curr_name = feature['properties']['vic_lga__3']
-        if '(UNINC)' in curr_name:
-            # remove ' (UNINC)'
-            curr_name = re.match('(.*) \(.*\)', curr_name).group(1)
-        curr_name = curr_name.lower().title()
+        curr_name = feature['properties']['vic_lga__3'].lower().title()
         if curr_name in lga_name_to_index_dict:
             # add coordinates to the relevant feature
             curr_coordinates = feature['geometry']['coordinates']
@@ -160,10 +156,7 @@ def get_lga_geojson():
 
 
 # TODO receive db as arg
-def upload_lga_geojson():
-    couch = couchdb.Server(COUCHDB_URL)
-    db = couch[COUCHDB_NAME]
-
+def upload_lga_geojson(db):
     lga_geojson_dict = get_lga_geojson()
     for feature in lga_geojson_dict['features']:
         curr_doc = {}
@@ -205,9 +198,10 @@ def haversine(lon1, lat1, lon2, lat2):
     return km
 
 
-def read_lga_geojson_from_couchdb(keep_unincorporated=False):
-    """Similar to read_lga_file(), but read from couchdb instead of file and no
-    need to do some preprocessing"""
+def read_lga_geojson_from_couchdb():
+    """Similar to read_lga_file(), but with three differences. First, this reads
+    from couchdb instead of file. Second no need to do some preprocessing.
+    Third, only return one variable"""
     couch = couchdb.Server(COUCHDB_URL)
     db = couch[COUCHDB_NAME]
 
@@ -216,20 +210,13 @@ def read_lga_geojson_from_couchdb(keep_unincorporated=False):
     lga_geojson_dict['type'] = 'FeatureCollection'
     feature_count = 0
 
-    lga_list = []
-
-    for row in db.view('_design/lga/_view/features-view'):
+    for row in db.view('%s/_view/%s' % (VIEW_GEOJSON['docid'], VIEW_GEOJSON['view_name'])):
         row['value']['properties'][COUCHDB_KEY] = row['key']
         lga_geojson_dict['features'].append(row['value'])
         feature_count += 1
 
-        if (row['key'] == 0 and not keep_unincorporated):
-            # dont want to add to 'lga_list' because 'row' contains
-            # unincorporated area
-            continue
-        lga_list.append(row['value']['properties']['lga_name'])
     lga_geojson_dict['totalFeatures'] = feature_count
-    return lga_geojson_dict, lga_list
+    return lga_geojson_dict
 
 
 class LGA:
@@ -245,17 +232,22 @@ class LGA:
 
         self.lga_geojson_dict = {}
 
-        lga_geojson_dict, lga_list = read_lga_geojson_from_couchdb()
+        self.lga_geojson_dict = read_lga_geojson_from_couchdb()
 
-        # create name_to_code and code_to_name dict
-        for feature in lga_geojson_dict['features']:
+        # create name_to_code and code_to_name dict excluding unincorporated
+        # areas
+        for feature in self.lga_geojson_dict['features']:
             lga_name = feature['properties']['lga_name']
             lga_code = feature['properties']['lga_code']
+            if 'Uninc' in lga_name:
+                # dont want to store code-name and name-code mapping for
+                # unincorporated areas because they all share the same code (0)
+                continue
             self.lga_name_to_code_dict[lga_name] = lga_code
             self.lga_code_to_name_dict[lga_code] = lga_name
 
         self.lga_dict = merge_lga_code_and_polygons(self.lga_name_to_code_dict,
-                                                    lga_geojson_dict)
+                                                    self.lga_geojson_dict)
 
     def get_code_from_coordinates(self, longitude, lattitude):
         """Returns an int representing the relevant lga code.
@@ -277,6 +269,10 @@ class LGA:
             return self.lga_code_to_name_dict[lga_code]
         else:
             return None
+
+    def is_code_valid(self, lga_code):
+        """Return True if the given LGA code is valid"""
+        return lga_code in self.lga_code_to_name_dict.keys()
 
     def get_centre_coord_and_radius(self):
         """Returns a dictionary with key: LGA name, value: d2. Where d2 is a

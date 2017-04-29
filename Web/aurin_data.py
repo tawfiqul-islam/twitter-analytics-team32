@@ -4,6 +4,7 @@ import sys
 import json
 import couchdb
 from bisect import bisect_right
+from lga import create_view
 
 
 config = configparser.ConfigParser()
@@ -15,6 +16,8 @@ COUCHDB_NAME = config['couchdb']['db_name_aurin']
 # rows from different AURIN data are joined based on this key
 COUCHDB_KEY = config['couchdb']['key']
 
+EXCLUDE_LGA_CODE = literal_eval(config['couchdb']['exclude_lga_code'])
+
 FILENAMES_AURIN = config['aurin_json_files']
 
 AURIN_COLUMNS = dict(config['aurin_columns'])
@@ -22,7 +25,9 @@ for key in AURIN_COLUMNS:
     AURIN_COLUMNS[key] = literal_eval(AURIN_COLUMNS[key])
 
 DECIMAL_PLACES = int(config['aurin_preprocessing']['decimal_places'])
-ACCURATE_TO = float(config['aurin_preprocessing']['accurate_to'])
+ACCURATE_TO = 10 ** -DECIMAL_PLACES
+
+VIEW_AURIN_ALL = literal_eval(config['couchdb']['view_aurin_all'])
 
 
 def read_json(filename):
@@ -74,7 +79,7 @@ def get_group(groups, value):
     value = round(value, DECIMAL_PLACES)
     for group in groups:
         if group[0] <= value <= group[1]:
-            return str(group[0]) + '-' + str(group[1])
+            return '%0.*f-%0.*f' % (DECIMAL_PLACES, group[0], DECIMAL_PLACES, group[1])
     print('Error, value does not fall to any of the groups')
     print('Groups: %s' % groups)
     print('Value: %d' % value)
@@ -105,6 +110,9 @@ def preprocess_docs(json_dict, doc_type, key, columns, actions):
 
     for feature in json_dict['features']:
         curr_doc = feature['properties']
+        if curr_doc[key] in EXCLUDE_LGA_CODE:
+            # skip row
+            continue
         p_doc = {}
         p_doc[COUCHDB_KEY] = curr_doc[key]  # store doc's key using uniform name
         p_doc['doc_type'] = doc_type  # use to differentiate aurin data
@@ -131,16 +139,7 @@ def upload_aurin_data(db, json_dict, doc_type, key):
         db.save(curr_doc)
 
 
-def upload_all_aurin_data():
-    couch = couchdb.Server(COUCHDB_URL)
-    try:
-        db = couch.create(COUCHDB_NAME)
-    except couchdb.PreconditionFailed:
-        # database with that name exists
-        # delete that and create a fresh one
-        couch.delete(COUCHDB_NAME)
-        db = couch.create(COUCHDB_NAME)
-
+def upload_all_aurin_data(db):
     for aurin_data_title, aurin_data_filename in FILENAMES_AURIN.items():
         json_dict = read_json(aurin_data_filename)
 
@@ -151,3 +150,30 @@ def upload_all_aurin_data():
         metadata_filename = aurin_data_filename[:-5] + '_metadata.json'
         key = get_key(metadata_filename)
         upload_aurin_data(db, json_dict, aurin_data_title, key)
+    create_view(db, VIEW_AURIN_ALL['docid'], VIEW_AURIN_ALL['view_name'], VIEW_AURIN_ALL['map_func'])
+
+
+def read_all_aurin_data_from_couchdb():
+    """Join all AURIN data by LGA code to form a dictionary with two keys:
+        'rows' and 'column_titles'. Unincorporated areas are excluded."""
+    couch = couchdb.Server(COUCHDB_URL)
+    db = couch[COUCHDB_NAME]
+
+    result = {}
+    result['rows'] = []
+    curr_lga_code = -1
+    for row in db.view('%s/_view/%s' % (VIEW_AURIN_ALL['docid'], VIEW_AURIN_ALL['view_name'])):
+        if curr_lga_code != row['key'][0]:
+            # encounters a new LGA code
+            curr_lga_code = row['key'][0]
+            curr_group = {}
+            curr_group[COUCHDB_KEY] = row['key'][0]
+            result['rows'].append(curr_group)
+        curr_group[row['key'][1]] = row['value']
+
+    result['column_titles'] = {}
+    for key in AURIN_COLUMNS:
+        result['column_titles'][key] = {}
+        for column in AURIN_COLUMNS[key]['columns']:
+            result['column_titles'][key][column[0]] = column[1]
+    return result
