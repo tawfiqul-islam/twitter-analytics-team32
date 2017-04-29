@@ -1,0 +1,8 @@
+---
+- hosts: vm2
+  remote_user: ubuntu
+  sudo: yes
+  
+  tasks:
+    - include: tasks/transfer-files2.yml
+    

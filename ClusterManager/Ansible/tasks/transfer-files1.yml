@@ -1,0 +1,8 @@
+- copy:
+    src: ../Harvester/vm1/
+    dest: /home/ubuntu/
+    owner: ubuntu
+    group: ubuntu
+    directory_mode: yes
+- command: sudo sh couchdb-main.sh
+- command: python tweet_search.py 
