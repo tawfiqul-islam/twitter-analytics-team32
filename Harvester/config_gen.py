@@ -17,14 +17,14 @@ config['Stream'] = { 'Location' : '140.888036,-39.05559,150.525361,-34.196400',
 #Convention is NECESSARY if intended use in conjunction with whole package
 config['UserSearch'] = { 'DatabaseCrawl' : 'victoriastreamuser',
                          'DatabaseStore' : 'victoriastream',
-                         'MaxTweets' : 1000}
+                         'MaxTweets' : 50000}
 
 #The name of the database upon which to crawl and search for more tweets
 #By convention, suggested format is dbcrawl = dbstore+location
 #Convention is NECESSARY if intended use in conjunction with whole package
 config['LocationSearch'] = { 'DatabaseCrawl' : 'victoriastreamlocation',
                              'DatabaseStore' : 'victoriastream',
-                             'MaxTweets' : 1000}
+                             'MaxTweets' : 50000}
 
 with open('config.ini', 'w') as configfile:
     config.write(configfile)
