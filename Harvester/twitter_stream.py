@@ -39,7 +39,7 @@ class MyListener(StreamListener):
                 #only store non retweets
                 if not tweet['retweeted'] and 'RT @' not in tweet['text']:
                     tweet['_id'] = tweet['id_str']
-                    db.save(tweet)
+                    self.db.save(tweet)
 
                 #when keeping user data, store their ID and tweet location
                 if args.user and tweet['user']['id_str']:
@@ -49,15 +49,15 @@ class MyListener(StreamListener):
                     user['geo'] = tweet['geo']
                     user['coordinates'] = tweet['coordinates']
                     user['place'] = tweet['place']
-                    userdb.save(user)
+                    self.userdb.save(user)
 
                 #when storing location data, store twitter locationID
-                if args.location and tweet['place']:
+                if self.args.location and tweet['place']:
                     if tweet['place']['id']:
                         #only add if location ID exists
                         location = {}
                         location['_id'] = tweet['place']['id']
-                        locationdb.save(location)
+                        self.locationdb.save(location)
 
             return True
         except couchdb.http.ResourceConflict as e:

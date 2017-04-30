@@ -59,7 +59,11 @@ class LocationCrawler():
 
     #Find user's past tweets based on ID and store in given database
     def add_tweets(self):
-        doc = self.locationdb[locationID]
+        try:
+            doc = self.locationdb[locationID]
+        except couchdb.http.ResourceNotFound as e:
+            #some sync issue has occured probably, expected so move on
+            return
         query = 'place:'+locationID
 
         if self.maxID > 0:
@@ -81,6 +85,8 @@ class LocationCrawler():
             #if delete option is activated remove IDs from locationdb 
             #possibly to avoid re-searching in future
             self.locationdb.delete(doc)
+
+
 
         for tweet in status_list:
             try:
