@@ -61,10 +61,17 @@ class UserCrawler():
 
     #Find user's past tweets based on ID and store in given database
     def add_tweets(self):
+
         try:
             doc = self.userdb[userID]
         except couchdb.http.ResourceNotFound as e:
             #some sync issue has occured probably, expected so move on
+            return
+
+        #TODO: remove this rubbish, wth is going on
+        if len(self.userID) > 10:
+            print(self.userID)
+            self.userdb.delete(doc)
             return
 
         if self.maxID < 0:
@@ -179,7 +186,7 @@ if __name__ == '__main__':
 
     #if option enabled, make a userid db first
     if args.new:
-        crawler.add_users
+        crawler.add_users()
         print('Done scraping, run without -n option now to find more tweets!')
         raise SystemExit
 

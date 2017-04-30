@@ -22,13 +22,9 @@ import argparse
 
 class MyListener(StreamListener):
     #Custom StreamListener for streaming data
-    def __init__(self,db,args,userdb=None,locationdb=None):
+    def __init__(self,db,args):
         self.db = db
         self.args = args
-        if userdb:
-            self.userdb = userdb
-        if locationdb:
-            self.locationdb = locationdb
 
     #When receiving a tweet
     def on_data(self, data):
@@ -57,7 +53,7 @@ class MyListener(StreamListener):
                         #only add if location ID exists
                         location = {}
                         location['_id'] = tweet['place']['id']
-                        self.locationdb.save(location)
+                        locationdb.save(location)
 
             return True
         except couchdb.http.ResourceConflict as e:
