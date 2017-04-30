@@ -31,4 +31,30 @@ body {
 }
 
 
+/* column selection at corner of the map */
+.column-selection {
+	padding: 0px 10px 10px; /* top (right,left) bottom */
+	font-size: 14px;
+	background: rgba(255,255,255,0.8);
+	box-shadow: 0 0 15px rgba(0,0,0,0.2); /* h-shadow v-shadow blur-distance color */
+	border-radius: 5px;
+}
+
+
+/* adapted from http://leafletjs.com/examples/choropleth/ */
+.legend {
+    line-height: 20px;
+}
+.legend i {
+    width: 20px;
+    height: 20px;
+    float: left;
+    margin-right: 10px;
+    opacity: 0.7;
+}
+
+
 /* #total-area-pie-chart svg { width: 500px; } */
+
+
+

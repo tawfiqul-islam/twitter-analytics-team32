@@ -212,8 +212,12 @@ def read_lga_geojson_from_couchdb():
 
     for row in db.view('%s/_view/%s' % (VIEW_GEOJSON['docid'], VIEW_GEOJSON['view_name'])):
         row['value']['properties'][COUCHDB_KEY] = row['key']
+        row['value']['type'] = 'Feature'
         lga_geojson_dict['features'].append(row['value'])
         feature_count += 1
+        # TODO delete
+        if feature_count > 20:
+            break
 
     lga_geojson_dict['totalFeatures'] = feature_count
     return lga_geojson_dict
