@@ -69,7 +69,7 @@ class UserCrawler():
             return
 
         #TODO: remove this rubbish, wth is going on
-        if len(self.userID) > 10:
+        if len(self.userID) > 12:
             print(self.userID)
             self.userdb.delete(doc)
             return

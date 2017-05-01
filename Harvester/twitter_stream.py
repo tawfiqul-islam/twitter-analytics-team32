@@ -45,7 +45,7 @@ class MyListener(StreamListener):
                     user['geo'] = tweet['geo']
                     user['coordinates'] = tweet['coordinates']
                     user['place'] = tweet['place']
-                    self.userdb.save(user)
+                    userdb.save(user)
 
                 #when storing location data, store twitter locationID
                 if self.args.location and tweet['place']:
@@ -109,7 +109,7 @@ if __name__ == '__main__':
         if locationdatabase not in couch:
             locationdb = couch.create(locationdatabase)
         else:
-            locationdb = couch[userdatabase]
+            locationdb = couch[locationdatabase]
         twitter_stream.locationdb = locationdb
 
     #This is the bounding box within which we want tweets
