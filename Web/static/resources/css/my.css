@@ -12,29 +12,36 @@ body {
 /* adapted from http://leafletjs.com/examples/choropleth/ */
 .area-info {
 	padding: 5px 10px 5px; /* top (right,left) bottom */
-	font-size: 14px;
+	font-size: 1em;
 	background: rgba(255,255,255,0.8);
 	box-shadow: 0 0 15px rgba(0,0,0,0.2); /* h-shadow v-shadow blur-distance color */
 	border-radius: 5px;
+	width: 240px;
+	max-width: 240px;
+	line-height: 17px;
 }
 .area-info h4 {
 	margin: 0 0 0px; /* top (right,left) bottom */
 	color: #6C7A89;
+	font-size: 1.1em;
 }
 .area-info h5 {
-	margin: 2 0 -5px; /* top (right,left) bottom */
-	font-size: .9em;
+	margin: 2 0 2px; /* top (right,left) bottom */
+	font-size: 1.05em;
 }
-.area-info p {
-	margin: 0 0 0px; /* top (right,left) bottom */
-	font-size: .85em;
+.area-info i {
+	width: 17px;
+	height: 17px;
+	float: left;
+	margin-right: 8px;
+	opacity: 0.7;
 }
 
 
 /* column selection at corner of the map */
 .column-selection {
 	padding: 0px 10px 10px; /* top (right,left) bottom */
-	font-size: 14px;
+	font-size: 1em;
 	background: rgba(255,255,255,0.8);
 	box-shadow: 0 0 15px rgba(0,0,0,0.2); /* h-shadow v-shadow blur-distance color */
 	border-radius: 5px;
@@ -43,14 +50,14 @@ body {
 
 /* adapted from http://leafletjs.com/examples/choropleth/ */
 .legend {
-    line-height: 20px;
+	line-height: 20px;
 }
 .legend i {
-    width: 20px;
-    height: 20px;
-    float: left;
-    margin-right: 10px;
-    opacity: 0.7;
+	width: 20px;
+	height: 20px;
+	float: left;
+	margin-right: 10px;
+	opacity: 0.7;
 }
 
 

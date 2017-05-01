@@ -21,20 +21,9 @@ function makeMapAndGraphs(error, lga, scenario_1) {
 
 
 function makeMap(lga, scenario_1) {
-	function internet_getter(row) { return row.internet_access.internet_tt_3_percent_6_11_6_11; }
-	function sitting_getter(row) { return row.sitting_hours.significance; }
 
 	var aurin_data = crossfilter(scenario_1.rows);
-
-	// create crossfilter dimensions
-	var lga_code_dimension = aurin_data.dimension(function (d) { return d.lga_code; });
-	var internet_dimension = aurin_data.dimension(internet_getter);
-	var sitting_dimension = aurin_data.dimension(sitting_getter);
-
-	// create crossfilter groups
-	var internet_group = internet_dimension.group();
-	var sitting_group = sitting_dimension.group();
-
+	
 	function getKeys(l) {
 		result = new Array;
 		for (var o in l) {
@@ -43,8 +32,38 @@ function makeMap(lga, scenario_1) {
 		return result
 	}
 
-	internet_categories = getKeys(internet_group.all()).sort();
-	sitting_categories = ['low', 'medium', 'high'];
+	columns = new Object();
+	for (var file in scenario_1.column_titles) {
+		for (var col in scenario_1.column_titles[file]) {
+			var curr = {
+				file: file,
+				col: col,
+				// getter: function (row) { return row[this.file][this.col]; }
+				getter: Function('row', 'return row["' + file + '"]["' + col + '"];'),
+				title: scenario_1.column_titles[file][col].title,
+				detail: scenario_1.column_titles[file][col].detail
+			}
+			
+			// determine list of categories
+			var group = aurin_data.dimension(curr.getter).group();
+			curr['categories'] = getKeys(group.all()).sort();
+			if (curr['categories'].indexOf('medium') > -1) {
+				// we cannot simply sort
+				curr['categories'] = ['low', 'medium', 'high'];
+			}
+
+			var key = file + '_' + col;
+			columns[key] = curr; // add to our dict
+		}
+	}
+
+	var curr_categories = columns.internet_access_internet_tt_3_percent_6_11_6_11.categories;
+	var curr_getter = columns.internet_access_internet_tt_3_percent_6_11_6_11.getter;
+	var default_c = 'internet_access_internet_tt_3_percent_6_11_6_11'; // use on first call to legend.update(default_c) and radio button with this id is checked by default
+
+	// needed to get a column value by LGA code
+	var lga_code_dimension = aurin_data.dimension(function (d) { return d.lga_code; });
+
 
 	// i is the index of the color
 	function getColor(i) {
@@ -54,8 +73,6 @@ function makeMap(lga, scenario_1) {
 		return config.group_color[i];
 	}
 
-	var curr_categories = internet_categories;
-	var curr_getter = internet_getter;
 
 
 	function fill_color(lga_code) {
@@ -98,7 +115,6 @@ function makeMap(lga, scenario_1) {
 	}
 
 	function resetHighlight(e) {
-		// TODO make more general
 		geojson.resetStyle(e.target);
 
 		// reset information at corner of the map
@@ -144,36 +160,50 @@ function makeMap(lga, scenario_1) {
 	// No arg on mouseout (set in resetHighlight)
 	info.update = function (properties) {
 		this._div.innerHTML = '<h4>Local Government Areas in Victoria</h4>';
-		if (properties) this._div.innerHTML += '<h5>' + properties.lga_name + '</h5><p>info here</p>';
+		if (properties) {
+			this._div.innerHTML += '<h5>' + properties.lga_name + '</h5>';
+			var row = lga_code_dimension.filter(properties.lga_code).top(1)[0];
+			if (!row) return; // skip area that dont have a row in scenario
+			for (var file in row) {
+				for (var col in row[file]) {
+					var key = file + '_' + col;
+					
+					// skip 'lga_code' and 'lga_geojson_feature'
+					if (!columns.hasOwnProperty(key)) break;
+
+					var i = -1;
+					i = columns[key].categories.indexOf(columns[key].getter(row));
+					this._div.innerHTML += '<i style="background:' + getColor(i) + '"></i> ';
+					this._div.innerHTML += columns[key].title + '<br>';
+				}
+			}
+		}
 	};
 	info.addTo(my_map);
 
 
 	// column selection
-	var column_selection = L.control({position: 'topleft'});
+	var column_selection = L.control({position: 'bottomleft'});
 
 	// called on control.addTo(map)
 	column_selection.onAdd = function (map) {
 		var div = L.DomUtil.create('div', 'column-selection'); // create a div
 		
 		div.innerHTML = '<form name="cf">';
-		div.innerHTML += '<input type="radio" name="column_selection_radio" value="internet" checked="checked" />Internet Access<br>';
-		div.innerHTML += '<input type="radio" name="column_selection_radio" value="sitting" />Sitting<br>'
+		for (var c in columns) {
+			div.innerHTML += '<input type="radio" name="column_selection_radio" id="' + c + '" value="' + c + '" />' + columns[c].title + '<br>';
+		}
 		div.innerHTML += '</form>';
 		return div;
 	};
 	column_selection.addTo(my_map);
 
 	function column_selection_handler() {
-		if (this.value == 'internet') {
-			curr_getter = internet_getter;
-			curr_categories = internet_categories;
-		} else {
-			curr_getter = sitting_getter;
-			curr_categories = sitting_categories;
-		}
+		curr_getter = columns[this.value].getter;
+		curr_categories = columns[this.value].categories;
+
 		geojson.setStyle(style); // change overlay layer
-		legend.update(); // change legend
+		legend.update(this.value); // change legend
 	}
 
 	var radios = document.getElementsByName('column_selection_radio');
@@ -186,12 +216,12 @@ function makeMap(lga, scenario_1) {
 	var legend = L.control({position: 'bottomright'});
 	legend.onAdd = function (map) {
 		this._div = L.DomUtil.create('div', 'area-info legend');
-		this.update();
+		this.update(default_c);
 		return this._div;
 	};
 
-	legend.update = function () {
-		this._div.innerHTML = '<h4>TODO title <br></h4>' // TODO
+	legend.update = function (c) {
+		this._div.innerHTML = '<h4>' + columns[c].detail + '<br></h4>'
 		for (var i = 0; i < curr_categories.length; i++) {
 			this._div.innerHTML += '<i style="background:' + getColor(i) + '"></i> ';
 			this._div.innerHTML += curr_categories[i] + '<br>';
@@ -200,4 +230,6 @@ function makeMap(lga, scenario_1) {
 
 	legend.addTo(my_map);
 
+	// set which radio button is checked at the beginning
+	document.getElementById(default_c).checked = true
 }

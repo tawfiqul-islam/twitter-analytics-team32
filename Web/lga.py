@@ -10,7 +10,7 @@ from math import radians, cos, sin, asin, sqrt
 
 
 config = configparser.ConfigParser()
-config.read('./config_web.ini')
+config.read('../Web/config_web.ini')
 
 COUCHDB_URL = config['couchdb']['ip_address'] + ':' + config['couchdb']['port']
 COUCHDB_NAME = config['couchdb']['db_name_aurin']
@@ -216,8 +216,8 @@ def read_lga_geojson_from_couchdb():
         lga_geojson_dict['features'].append(row['value'])
         feature_count += 1
         # TODO delete
-        if feature_count > 20:
-            break
+#        if feature_count > 20:
+#            break
 
     lga_geojson_dict['totalFeatures'] = feature_count
     return lga_geojson_dict

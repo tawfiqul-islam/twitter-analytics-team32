@@ -175,5 +175,7 @@ def read_all_aurin_data_from_couchdb():
     for key in AURIN_COLUMNS:
         result['column_titles'][key] = {}
         for column in AURIN_COLUMNS[key]['columns']:
-            result['column_titles'][key][column[0]] = column[1]
+            result['column_titles'][key][column[0]] = {}
+            result['column_titles'][key][column[0]]['title'] = column[1]
+            result['column_titles'][key][column[0]]['detail'] = column[2]
     return result
