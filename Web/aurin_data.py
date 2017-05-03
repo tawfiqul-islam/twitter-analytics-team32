@@ -44,7 +44,8 @@ def get_key(metadata_filename):
 def generate_groups(list_of_ints, n):
     """Tries to divide the integers into n groups with same size. However fails
     when size of list is not divisible by n and/or there are duplicates in the
-    list"""
+    list
+    """
     groups = []
 
     list_of_ints.sort()
@@ -102,12 +103,17 @@ def preprocess_docs(json_dict, doc_type, key, columns, actions):
         if actions[i][0] != 'group':
             continue
         curr_values = []
-        for curr_doc in json_dict['features']:
-            curr_values.append(curr_doc['properties'][columns[i][0]])
+        for feature in json_dict['features']:
+            curr_doc = feature['properties']
+            if curr_doc[key] in EXCLUDE_LGA_CODE:
+                # skip row
+                continue
+            curr_values.append(curr_doc[columns[i][0]])
 
         curr_values = [round(x, DECIMAL_PLACES) for x in curr_values]
         groups_dict[columns[i][0]] = generate_groups(curr_values, actions[i][1])
 
+    # preprocess and build list of rows
     for feature in json_dict['features']:
         curr_doc = feature['properties']
         if curr_doc[key] in EXCLUDE_LGA_CODE:
@@ -155,7 +161,8 @@ def upload_all_aurin_data(db):
 
 def read_all_aurin_data_from_couchdb():
     """Join all AURIN data by LGA code to form a dictionary with two keys:
-        'rows' and 'column_titles'. Unincorporated areas are excluded."""
+        'rows' and 'column_titles'. Unincorporated areas are excluded.
+    """
     couch = couchdb.Server(COUCHDB_URL)
     db = couch[COUCHDB_NAME]
 

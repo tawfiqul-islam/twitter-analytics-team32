@@ -19,8 +19,13 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/scenario1_graphs')
+def scenario1_graphs():
+    return render_template('scenario1_graphs.html')
+
+
 @app.route('/data/vic-lga')
-def get_vic_lga():
+def data_vic_lga():
     # return Response(data, status=200, mimetype='application/json')
     lga_geojson = read_lga_geojson_from_couchdb()
     # return jsonify(lga_geojson)
@@ -29,8 +34,8 @@ def get_vic_lga():
     return Response(json.dumps(lga_geojson, separators=(',', ':')), status=200, mimetype='application/json')
 
 
-@app.route('/data/scenario-1')
-def get_scenario_1():
+@app.route('/data/scenario1')
+def data_scenario1():
     aurin_list = read_all_aurin_data_from_couchdb()
     return jsonify(aurin_list)
 

@@ -52,6 +52,11 @@ body {
 .legend {
 	line-height: 20px;
 }
+.legend h4 {
+	margin: 0 0 8px; /* top (right,left) bottom */
+	color: #6C7A89;
+	font-size: 1.1em;
+}
 .legend i {
 	width: 20px;
 	height: 20px;

@@ -1,61 +1,19 @@
-var config = {
-	lga_url : '/data/vic-lga',
-	scenario_1_url: '/data/scenario-1',
-	melb_coordinates : [-37.8136, 144.9631],
-	vic_coordinates : [-37.4713, 144.7852],
-	// group_color: ['#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177'],
-	group_color: ['#fde0dd', '#fa9fb5', '#c51b8a'],
-	null_color: '#737373'
-}
-
-
 d3.queue()
 	.defer(d3.json, config.lga_url)
-	.defer(d3.json, config.scenario_1_url)
-	.await(makeMapAndGraphs);
+	.defer(d3.json, config.scenario1_url)
+	.await(makeMap);
 
-function makeMapAndGraphs(error, lga, scenario_1) {
-	makeMap(lga, scenario_1);
-	//makeGraphs(lga);
+function makeMap(error, lga, scenario1) {
+	console.log(error);
+	makeMap1(lga, scenario1);
 }
 
 
-function makeMap(lga, scenario_1) {
+function makeMap1(lga, scenario) {
 
-	var aurin_data = crossfilter(scenario_1.rows);
-	
-	function getKeys(l) {
-		result = new Array;
-		for (var o in l) {
-			result.push(l[o].key);
-		}
-		return result
-	}
-
-	columns = new Object();
-	for (var file in scenario_1.column_titles) {
-		for (var col in scenario_1.column_titles[file]) {
-			var curr = {
-				file: file,
-				col: col,
-				// getter: function (row) { return row[this.file][this.col]; }
-				getter: Function('row', 'return row["' + file + '"]["' + col + '"];'),
-				title: scenario_1.column_titles[file][col].title,
-				detail: scenario_1.column_titles[file][col].detail
-			}
-			
-			// determine list of categories
-			var group = aurin_data.dimension(curr.getter).group();
-			curr['categories'] = getKeys(group.all()).sort();
-			if (curr['categories'].indexOf('medium') > -1) {
-				// we cannot simply sort
-				curr['categories'] = ['low', 'medium', 'high'];
-			}
-
-			var key = file + '_' + col;
-			columns[key] = curr; // add to our dict
-		}
-	}
+	data = preprocess(scenario); // see preprocess.js
+	columns = data.columns;
+	aurin_data = data.aurin_data
 
 	var curr_categories = columns.internet_access_internet_tt_3_percent_6_11_6_11.categories;
 	var curr_getter = columns.internet_access_internet_tt_3_percent_6_11_6_11.getter;
@@ -73,9 +31,7 @@ function makeMap(lga, scenario_1) {
 		return config.group_color[i];
 	}
 
-
-
-	function fill_color(lga_code) {
+	function fillColor(lga_code) {
 		var row = lga_code_dimension.filter(lga_code).top(1)[0];
 		var i = -1;
 		if (row) i = curr_categories.indexOf(curr_getter(row));
@@ -84,7 +40,7 @@ function makeMap(lga, scenario_1) {
 
 	function style(feature) {
 		return {
-			fillColor: fill_color(feature.properties.lga_code),
+			fillColor: fillColor(feature.properties.lga_code),
 			weight: 1,
 			opacity: 1,
 			color: 'white',
@@ -198,7 +154,7 @@ function makeMap(lga, scenario_1) {
 	};
 	column_selection.addTo(my_map);
 
-	function column_selection_handler() {
+	function columnSelectionHandler() {
 		curr_getter = columns[this.value].getter;
 		curr_categories = columns[this.value].categories;
 
@@ -208,7 +164,7 @@ function makeMap(lga, scenario_1) {
 
 	var radios = document.getElementsByName('column_selection_radio');
 	for(var i = 0, max = radios.length; i < max; i++) {
-		radios[i].onclick = column_selection_handler;
+		radios[i].onclick = columnSelectionHandler;
 	}
 
 
@@ -221,7 +177,7 @@ function makeMap(lga, scenario_1) {
 	};
 
 	legend.update = function (c) {
-		this._div.innerHTML = '<h4>' + columns[c].detail + '<br></h4>'
+		this._div.innerHTML = '<h4>' + columns[c].detail + '</h4>'
 		for (var i = 0; i < curr_categories.length; i++) {
 			this._div.innerHTML += '<i style="background:' + getColor(i) + '"></i> ';
 			this._div.innerHTML += curr_categories[i] + '<br>';

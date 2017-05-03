@@ -1,3 +1,4 @@
+import sys
 import configparser
 import couchdb
 from aurin_data import upload_all_aurin_data
@@ -18,8 +19,11 @@ if __name__ == '__main__':
     except couchdb.PreconditionFailed:
         # database with that name exists
         # delete that and create a fresh one
+        # TODO delete
         couch.delete(COUCHDB_NAME)
         db = couch.create(COUCHDB_NAME)
+        # print('Error, database with name %s exists' % (COUCHDB_NAME))
+        # sys.exit(1)
 
     upload_all_aurin_data(db)
 
