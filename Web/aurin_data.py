@@ -28,6 +28,7 @@ DECIMAL_PLACES = int(config['aurin_preprocessing']['decimal_places'])
 ACCURATE_TO = 10 ** -DECIMAL_PLACES
 
 VIEW_AURIN_ALL = literal_eval(config['couchdb']['view_aurin_all'])
+VIEW_COLUMNS_INFO = literal_eval(config['couchdb']['view_columns_info'])
 
 
 def read_json(filename):
@@ -76,72 +77,72 @@ def generate_groups(list_of_ints, n):
     return groups
 
 
-def get_group(groups, value):
-    value = round(value, DECIMAL_PLACES)
-    for group in groups:
-        if group[0] <= value <= group[1]:
-            return '%0.*f-%0.*f' % (DECIMAL_PLACES, group[0], DECIMAL_PLACES, group[1])
-    print('Error, value does not fall to any of the groups')
-    print('Groups: %s' % groups)
-    print('Value: %d' % value)
-    sys.exit(1)
+def generate_docs(json_dict, doc_type, key, columns, actions, scenarios):
+    """Returns list of docs to be stored in couchdb. The first element is the
+    'columns_info' and the rest are rows."""
 
-
-def preprocess_docs(json_dict, doc_type, key, columns, actions):
-    """Returns docs that contains key, doctype, columns and preprocessed
-    values. The columns and preprocessed values are in a dict stored as value to
-    the key 'columns'"""
-
-    preprocessed_docs = []
-
-    # key: column name, value: list of groups (a group is a list of size two)
-    groups_dict = {}
+    # store two type of data: a 'columns_info' and rows
+    docs = []
 
     # generate groups for each column that needs to be grouped
-    assert (len(columns) == len(actions)), 'Length of columns and actions should be the same in file %d' % doc_type
+    assert (len(columns) == len(actions) == len(scenarios)), 'Length of columns, actions and scenarios should be the same in file %d' % doc_type
+    columns_info = {'doc_type': 'columns_info', 'columns_info': {doc_type: {}}}
     for i in range(len(columns)):
+        curr_column_name = columns[i][0]
         if actions[i][0] != 'group':
             continue
+
+        # convert numerical values to categorical
+        # generate list of values for a particular column
         curr_values = []
         for feature in json_dict['features']:
             curr_doc = feature['properties']
             if curr_doc[key] in EXCLUDE_LGA_CODE:
                 # skip row
                 continue
-            curr_values.append(curr_doc[columns[i][0]])
-
+            curr_values.append(curr_doc[curr_column_name])
         curr_values = [round(x, DECIMAL_PLACES) for x in curr_values]
-        groups_dict[columns[i][0]] = generate_groups(curr_values, actions[i][1])
+        curr_groups = generate_groups(curr_values, actions[i][1])
+        for g in range(len(curr_groups)):
+            curr_groups[g] = (round(curr_groups[g][0], DECIMAL_PLACES), round(curr_groups[g][1], DECIMAL_PLACES))
+        curr_column_info = {}
+        curr_column_info['groups'] = curr_groups
+        curr_column_info['title'] = columns[i][1]
+        curr_column_info['detail'] = columns[i][2]
+        curr_column_info['scenarios'] = scenarios[i]
+        columns_info['columns_info'][doc_type][curr_column_name] = curr_column_info
+    docs.append(columns_info)
 
-    # preprocess and build list of rows
+    # build list of rows
     for feature in json_dict['features']:
-        curr_doc = feature['properties']
-        if curr_doc[key] in EXCLUDE_LGA_CODE:
+        curr_property = feature['properties']
+        if curr_property[key] in EXCLUDE_LGA_CODE:
             # skip row
             continue
-        p_doc = {}
-        p_doc[COUCHDB_KEY] = curr_doc[key]  # store doc's key using uniform name
-        p_doc['doc_type'] = doc_type  # use to differentiate aurin data
-        p_doc['columns'] = {}  # store preprocessed values here
+        curr_doc = {}
+        curr_doc[COUCHDB_KEY] = curr_property[key]  # store doc's key using uniform name
+        curr_doc['doc_type'] = doc_type  # use to differentiate aurin data
+        curr_doc['columns'] = {}  # store preprocessed values here
 
         for i in range(len(columns)):
-            curr_column = columns[i][0]
-            if actions[i][0] == 'group':
-                # convert numerical to categorical
-                p_doc['columns'][curr_column] = get_group(groups_dict[columns[i][0]], curr_doc[curr_column])
-            elif actions[i][0] == 'relabel':
-                p_doc['columns'][curr_column] = actions[i][1][curr_doc[curr_column]]
-        preprocessed_docs.append(p_doc)
+            curr_col_name = columns[i][0]
+            curr_doc['columns'][curr_col_name] = {}
+            curr_doc['columns'][curr_col_name]['value'] = curr_property[curr_col_name]
+            curr_doc['columns'][curr_col_name]['scenarios'] = scenarios[i]
+        docs.append(curr_doc)
 
-    return preprocessed_docs
+    return docs
 
 
 def upload_aurin_data(db, json_dict, doc_type, key):
     # relevant data are in features[i].properties
-    preprocessed_docs = preprocess_docs(json_dict, doc_type, key, AURIN_COLUMNS[doc_type]['columns'], AURIN_COLUMNS[doc_type]['actions'])
+    docs = generate_docs(json_dict, doc_type, key,
+                         AURIN_COLUMNS[doc_type]['columns'],
+                         AURIN_COLUMNS[doc_type]['actions'],
+                         AURIN_COLUMNS[doc_type]['scenarios'])
 
     # store preprocessed docs into couchdb
-    for curr_doc in preprocessed_docs:
+    for curr_doc in docs:
         db.save(curr_doc)
 
 
@@ -157,9 +158,10 @@ def upload_all_aurin_data(db):
         key = get_key(metadata_filename)
         upload_aurin_data(db, json_dict, aurin_data_title, key)
     create_view(db, VIEW_AURIN_ALL['docid'], VIEW_AURIN_ALL['view_name'], VIEW_AURIN_ALL['map_func'])
+    create_view(db, VIEW_COLUMNS_INFO['docid'], VIEW_COLUMNS_INFO['view_name'], VIEW_COLUMNS_INFO['map_func'])
 
 
-def read_all_aurin_data_from_couchdb():
+def read_scenario_from_couchdb(which_scenario):
     """Join all AURIN data by LGA code to form a dictionary with two keys:
         'rows' and 'column_titles'. Unincorporated areas are excluded.
     """
@@ -169,20 +171,25 @@ def read_all_aurin_data_from_couchdb():
     result = {}
     result['rows'] = []
     curr_lga_code = -1
-    for row in db.view('%s/_view/%s' % (VIEW_AURIN_ALL['docid'], VIEW_AURIN_ALL['view_name'])):
-        if curr_lga_code != row['key'][0]:
+    for row in db.view('%s/_view/%s' % (VIEW_AURIN_ALL['docid'], VIEW_AURIN_ALL['view_name']),
+                       startkey=[which_scenario],
+                       endkey=[which_scenario+1]):
+        if curr_lga_code != row['key'][1]:
             # encounters a new LGA code
-            curr_lga_code = row['key'][0]
+            curr_lga_code = row['key'][1]
             curr_group = {}
-            curr_group[COUCHDB_KEY] = row['key'][0]
+            curr_group[COUCHDB_KEY] = row['key'][1]
             result['rows'].append(curr_group)
-        curr_group[row['key'][1]] = row['value']
+        assert (len(row['value']) == 1), "The property 'value' must have only one property"
+        curr_column_name = row['value'].keys()[0]
+        assert (curr_column_name not in curr_group), "Column name must be unique"
+        curr_group[curr_column_name] = row['value'][curr_column_name]
 
-    result['column_titles'] = {}
-    for key in AURIN_COLUMNS:
-        result['column_titles'][key] = {}
-        for column in AURIN_COLUMNS[key]['columns']:
-            result['column_titles'][key][column[0]] = {}
-            result['column_titles'][key][column[0]]['title'] = column[1]
-            result['column_titles'][key][column[0]]['detail'] = column[2]
+    result['column_infos'] = {}
+    for row in db.view('%s/_view/%s' % (VIEW_COLUMNS_INFO['docid'], VIEW_COLUMNS_INFO['view_name']),
+                       startkey=[which_scenario],
+                       endkey=[which_scenario+1]):
+        curr_column_name = row['key'][1]
+        assert (curr_column_name not in result['column_infos']),  "Column name must be unique"
+        result['column_infos'][curr_column_name] = row['value']
     return result

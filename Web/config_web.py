@@ -14,20 +14,43 @@ VIEW_GEOJSON_MAP = \
 
 VIEW_AURIN_ALL_MAP = \
     '''function (doc) {
-        if (doc.lga_code == 0) {
+        if (doc.lga_code == 0 || doc.doc_type == 'columns_info') {
             // skip these
             return
         }
         var v;
         if (doc.doc_type == 'lga_geojson_feature') {
             // only want LGA name
+            scenarios = [1,2,3,4];
             v = {'lga_name': doc.columns.properties.lga_name};
+            for (var i=0; i<scenarios.length; i++) {
+                emit([scenarios[i], doc.lga_code, doc.doc_type], v);
+            }
         } else {
-            // use all
-            v = doc.columns;
+            for (var c in doc.columns) {
+                v = {}
+                v[c] = doc.columns[c].value;
+                for (var i=0; i<doc.columns[c].scenarios.length; i++) {
+                    emit([doc.columns[c].scenarios[i], doc.lga_code, doc.doc_type], v);
+                }
+                }
+            }
         }
-        emit([doc.lga_code, doc.doc_type], v);
+    '''
+
+VIEW_COLUMNS_INFO_MAP = \
+    '''function (doc) {
+        if (doc.doc_type == 'columns_info') {
+            for (var f in doc.columns_info) {
+                for (var c in doc.columns_info[f]) {
+                    for (var i=0; i<doc.columns_info[f][c]['scenarios'].length; i++) {
+                        var s = doc.columns_info[f][c]['scenarios'][0]
+                        emit([s, c], doc.columns_info[f][c]);
+                    }
+                }
+            }
         }
+    }
     '''
 
 
@@ -48,33 +71,41 @@ def main():
                          'view_geojson': {'docid': '_design/lga',
                                           'view_name': 'features-view',
                                           'map_func': VIEW_GEOJSON_MAP},
-                         'view_aurin_all': {'docid': '_design/aurin_all',
+                         'view_aurin_all': {'docid': '_design/aurin-all',
                                             'view_name': 'collation-view',
-                                            'map_func': VIEW_AURIN_ALL_MAP}}
+                                            'map_func': VIEW_AURIN_ALL_MAP},
+                         'view_columns_info': {'docid': '_design/columns_info',
+                                               'view_name': 'columns-info-view',
+                                               'map_func': VIEW_COLUMNS_INFO_MAP}
+                         }
 
     config['geojson_file'] = {'lga': DATA_PATH + 'vic-lga.json',
                               'doc_type': 'lga_geojson_feature'}
 
     config['aurin_json_files'] = {'internet_access': DATA_PATH + 'LGA11_Internet_Access_at_Home.json',
-                                  'sitting_hours': DATA_PATH + 'LGA_Sedentary_behaviour__sitting_hours_per_day_.json',
-                                  'soft_drink': DATA_PATH + 'LGA_Daily_soft_drink_consumption.json',
-                                  'health_risk': DATA_PATH + 'LGA11_Health_Risk_Factors_-_Modelled_Estimate.json'}
+                                  'profiles_data': DATA_PATH + 'Local_Government_Area__LGA__profiles_data_2015_for_VIC.json'}
 
     config['aurin_columns'] = {'internet_access': {'columns': [['internet_tt_3_percent_6_11_6_11', 'Internet Access', 'Percentage of Private Dwellings with Internet Connections']],
-                                                   'actions': [['group', 3]]},
-                               'sitting_hours': {'columns': [['significance', 'Sitting Behaviour', "Proportion of People Who Sit for 7 Hours or More per Day Relative to Victoria's Average"]],
-                                                 'actions': [['relabel', {'better': 'low',
-                                                                          'none': 'medium',
-                                                                          'worse': 'high'}]]},
-                               'soft_drink': {'columns': [['significance', 'Soft Drink Consumption', "Soft Drink Consumption Relative to Victoria's Average"]],
-                                              'actions': [['relabel', {'caution': 'low',
-                                                                       'better': 'low',
-                                                                       'none': 'medium',
-                                                                       'worse': 'high'}]]},
-                               'health_risk': {'columns': [['smokers_me_2_rate_3_11_7_13', 'Smokers', 'Percentage of Current smokers (modelled estimate)'],
-                                                           ['obese_p_me_2_rate_3_11_7_13', 'Obesity', 'Percentage of Obese Persons (modelled estimate)'],
-                                                           ['alcohol_cons_2_rate_3_11_7_13', 'Alcohol Consumption', 'Percentage of High Risk Alcohol Consumption (modelled estimate)']],
-                                               'actions': [['group', 3], ['group', 3], ['group', 3]]}}
+                                                   'actions': [['group', 3]],
+                                                   'scenarios': [[3]]},
+                               'profiles_data': {'columns': [['ppl_aged_over_18_who_are_current_smokers_perc', 'Smokers', 'Percentage of people aged over 18 who are current smokers'],
+                                                             ['ppl_reporting_being_obese_perc', 'Obesity', 'Percentage of people reported being obese'],
+                                                             ['ppl_who_are_members_of_a_sports_grp_perc', 'Sports Group', 'Percentage of members of a sports group'],
+                                                             ['ppl_drink_sugar_sweetened_soft_drink_every_day_perc', 'Soft Drink', 'Percentage of people who drink sugar-sweetened soft drink every day']
+                                                             ],
+                                                 # preprocessing action
+                                                 'actions': [['group', 3],
+                                                             ['group', 3],
+                                                             ['group', 3],
+                                                             ['group', 3]],
+                                                 # which scenarios the column
+                                                 # belong to
+                                                 'scenarios': [[3],
+                                                               [3],
+                                                               [3],
+                                                               [3]]
+                                                 }
+                               }
 
     config['aurin_preprocessing'] = {'decimal_places': 2}
 

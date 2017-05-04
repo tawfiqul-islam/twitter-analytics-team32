@@ -1,11 +1,11 @@
 d3.queue()
 	.defer(d3.json, config.lga_url)
-	.defer(d3.json, config.scenario1_url)
+	.defer(d3.json, config.scenario3_url)
 	.await(makeMap);
 
-function makeMap(error, lga, scenario1) {
+function makeMap(error, lga, scenario) {
 	console.log(error);
-	makeMap1(lga, scenario1);
+	makeMap1(lga, scenario);
 }
 
 
@@ -15,9 +15,9 @@ function makeMap1(lga, scenario) {
 	columns = data.columns;
 	aurin_data = data.aurin_data
 
-	var curr_categories = columns.internet_access_internet_tt_3_percent_6_11_6_11.categories;
-	var curr_getter = columns.internet_access_internet_tt_3_percent_6_11_6_11.getter;
-	var default_c = 'internet_access_internet_tt_3_percent_6_11_6_11'; // use on first call to legend.update(default_c) and radio button with this id is checked by default
+	var curr_groups_str = columns.internet_tt_3_percent_6_11_6_11.groups_str;
+	var curr_getter = columns.internet_tt_3_percent_6_11_6_11.getter;
+	var default_c = 'internet_tt_3_percent_6_11_6_11'; // use on first call to legend.update(default_c) and radio button with this id is checked by default
 
 	// needed to get a column value by LGA code
 	var lga_code_dimension = aurin_data.dimension(function (d) { return d.lga_code; });
@@ -34,7 +34,7 @@ function makeMap1(lga, scenario) {
 	function fillColor(lga_code) {
 		var row = lga_code_dimension.filter(lga_code).top(1)[0];
 		var i = -1;
-		if (row) i = curr_categories.indexOf(curr_getter(row));
+		if (row) i = curr_groups_str.indexOf(curr_getter(row));
 		return getColor(i);
 	}
 
@@ -86,7 +86,7 @@ function makeMap1(lga, scenario) {
 		});
 	}
 
-	
+
 	var my_map = L.map('mapid').setView(config.melb_coordinates, 8);
 
 	// from https://leaflet-extras.github.io/leaflet-providers/preview/
@@ -99,7 +99,7 @@ function makeMap1(lga, scenario) {
 		style: style,
 		onEachFeature: onEachFeature
 	}).addTo(my_map);
-	
+
 
 	// show information of a polygon on hover in the corner of the map
 	var info = L.control({position: 'topright'});
@@ -120,18 +120,14 @@ function makeMap1(lga, scenario) {
 			this._div.innerHTML += '<h5>' + properties.lga_name + '</h5>';
 			var row = lga_code_dimension.filter(properties.lga_code).top(1)[0];
 			if (!row) return; // skip area that dont have a row in scenario
-			for (var file in row) {
-				for (var col in row[file]) {
-					var key = file + '_' + col;
-					
-					// skip 'lga_code' and 'lga_geojson_feature'
-					if (!columns.hasOwnProperty(key)) break;
+			for (var col in row) {
+				// skip 'lga_code' and 'lga_geojson_feature'
+				if (!columns.hasOwnProperty(col)) continue;
 
-					var i = -1;
-					i = columns[key].categories.indexOf(columns[key].getter(row));
-					this._div.innerHTML += '<i style="background:' + getColor(i) + '"></i> ';
-					this._div.innerHTML += columns[key].title + '<br>';
-				}
+				var i = -1;
+				i = columns[col].groups_str.indexOf(columns[col].getter(row));
+				this._div.innerHTML += '<i style="background:' + getColor(i) + '"></i> ';
+				this._div.innerHTML += columns[col].title + '<br>';
 			}
 		}
 	};
@@ -144,7 +140,7 @@ function makeMap1(lga, scenario) {
 	// called on control.addTo(map)
 	column_selection.onAdd = function (map) {
 		var div = L.DomUtil.create('div', 'column-selection'); // create a div
-		
+
 		div.innerHTML = '<form name="cf">';
 		for (var c in columns) {
 			div.innerHTML += '<input type="radio" name="column_selection_radio" id="' + c + '" value="' + c + '" />' + columns[c].title + '<br>';
@@ -156,7 +152,7 @@ function makeMap1(lga, scenario) {
 
 	function columnSelectionHandler() {
 		curr_getter = columns[this.value].getter;
-		curr_categories = columns[this.value].categories;
+		curr_groups_str = columns[this.value].groups_str;
 
 		geojson.setStyle(style); // change overlay layer
 		legend.update(this.value); // change legend
@@ -178,9 +174,9 @@ function makeMap1(lga, scenario) {
 
 	legend.update = function (c) {
 		this._div.innerHTML = '<h4>' + columns[c].detail + '</h4>'
-		for (var i = 0; i < curr_categories.length; i++) {
+		for (var i = 0; i < curr_groups_str.length; i++) {
 			this._div.innerHTML += '<i style="background:' + getColor(i) + '"></i> ';
-			this._div.innerHTML += curr_categories[i] + '<br>';
+			this._div.innerHTML += curr_groups_str[i] + '<br>';
 		}
 	}
 

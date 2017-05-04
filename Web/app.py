@@ -3,7 +3,7 @@ from flask import render_template
 from flask import jsonify
 from flask import Response
 from lga import read_lga_geojson_from_couchdb
-from aurin_data import read_all_aurin_data_from_couchdb
+from aurin_data import read_scenario_from_couchdb
 import json
 
 
@@ -34,9 +34,9 @@ def data_vic_lga():
     return Response(json.dumps(lga_geojson, separators=(',', ':')), status=200, mimetype='application/json')
 
 
-@app.route('/data/scenario1')
+@app.route('/data/scenario3')
 def data_scenario1():
-    aurin_list = read_all_aurin_data_from_couchdb()
+    aurin_list = read_scenario_from_couchdb(3)
     return jsonify(aurin_list)
 
 
