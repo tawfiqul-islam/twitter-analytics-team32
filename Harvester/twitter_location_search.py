@@ -21,7 +21,7 @@ import configparser
 import json
 import couchdb
 import argparse
-import sleep
+import time
 
 
 class LocationCrawler():

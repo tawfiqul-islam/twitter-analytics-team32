@@ -27,7 +27,7 @@ import configparser
 import json
 import couchdb
 import argparse
-import sleep
+import time
 
 class UserCrawler():
     def __init__(self, userdb, db, args, maxtweets=None, locationdb=None,userID=None):
