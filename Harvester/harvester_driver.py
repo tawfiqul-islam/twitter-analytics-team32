@@ -41,7 +41,7 @@ if __name__ == '__main__':
     #find rank based on IP
     my_ip = [(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
     for vmnum in config['VMTag']:
-        ipaddr = config['VMTag'][vmnum]
+        ipaddr = str(config['VMTag'][vmnum])
         if my_ip == ipaddr:
             my_rank = vmnum
 
@@ -64,10 +64,7 @@ if __name__ == '__main__':
 
     if my_rank == 'vm2':
         #STREAMER
-        twitter_stream = Stream(auth, MyListener(db=db,args=args))
-
-        twitter_stream.userdb = userdb
-        twitter_stream.locationdb = locationdb
+        twitter_stream = Stream(auth, MyListener(db=db,args=args,userdb=userdb,locationdb=locationdb))
 
         #This is the bounding box within which we want tweets
         boundingbox = config['Stream']['Location']
@@ -76,7 +73,6 @@ if __name__ == '__main__':
         loc2 = float(boundingbox[1])
         loc3 = float(boundingbox[2])
         loc4 = float(boundingbox[3])
-
         #Set up the stream
         twitter_stream.filter(locations=[loc1,loc2,loc3,loc4])
 

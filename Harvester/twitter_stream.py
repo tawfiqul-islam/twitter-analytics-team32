@@ -21,9 +21,17 @@ import argparse
 
 class MyListener(StreamListener):
     #Custom StreamListener for streaming data
-    def __init__(self,db,args):
+    def __init__(self,db,args,userdb,locationdb):
         self.db = db
         self.args = args
+        self.userdb = userdb
+        self.locationdb = locationdb
+
+    def set_userdb(self, userdb):
+        self.userdb = userdb
+
+    def set_locationdb(self,locationdb):
+        self.locationdb = locationdb
 
     #When receiving a tweet
     def on_data(self, data):
@@ -37,14 +45,14 @@ class MyListener(StreamListener):
                     self.db.save(tweet)
 
                 #when keeping user data, store their ID and tweet location
-                if args.user and tweet['user']['id_str']:
+                if self.args.user and tweet['user']['id_str']:
                     #ensure id_str is available
                     user = {}
                     user['_id'] = tweet['user']['id_str']
                     user['geo'] = tweet['geo']
                     user['coordinates'] = tweet['coordinates']
                     user['place'] = tweet['place']
-                    userdb.save(user)
+                    self.userdb.save(user)
 
                 #when storing location data, store twitter locationID
                 if self.args.location and tweet['place']:
@@ -52,7 +60,7 @@ class MyListener(StreamListener):
                         #only add if location ID exists
                         location = {}
                         location['_id'] = tweet['place']['id']
-                        locationdb.save(location)
+                        self.locationdb.save(location)
 
             return True
         except couchdb.http.ResourceConflict as e:
@@ -87,13 +95,14 @@ if __name__ == '__main__':
     userdatabase = databasename + 'user'
     locationdatabase = databasename + 'location'
 
+    userdb = None
+    locationdb = None
+
     #Open up our couchdb database
     if databasename not in couch:
         db = couch.create(databasename)
     else:
         db = couch[databasename]
-
-    twitter_stream = Stream(auth, MyListener(db=db,args=args))
 
     #user option enabled
     if args.user:
@@ -101,7 +110,6 @@ if __name__ == '__main__':
             userdb = couch.create(userdatabase)
         else:
             userdb = couch[userdatabase]
-        twitter_stream.userdb = userdb
 
     #location option enabled
     if args.location:
@@ -109,8 +117,8 @@ if __name__ == '__main__':
             locationdb = couch.create(locationdatabase)
         else:
             locationdb = couch[locationdatabase]
-        twitter_stream.locationdb = locationdb
 
+    twitter_stream = Stream(auth, MyListener(db=db,args=args,userdb=userdb,locationdb=locationdb))
     #This is the bounding box within which we want tweets
     boundingbox = config['Stream']['Location']
     boundingbox = boundingbox.split(',')
