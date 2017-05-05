@@ -296,7 +296,11 @@ for k,v in mydict.items():
         location_list = api.reverse_geocode(long=str(v['centre_coord'][0]), 
             lat=str(v['centre_coord'][1]), accuracy=v['radius']/1000)
     except tweepy.error.RateLimitError:
+        print("sleeping")
         time.sleep(1000)
+        location_list = api.reverse_geocode(long=str(v['centre_coord'][0]), 
+            lat=str(v['centre_coord'][1]), accuracy=v['radius']/1000)
+
 
     print(len(location_list))
     for loc in location_list:
