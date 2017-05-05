@@ -177,6 +177,8 @@ def create_view(db, docid, view_name, map_func, reduce_func=False):
     doc['views'][view_name] = {'map': map_func}
     doc['language'] = 'javascript'
     # TODO handle reduce_func
+    if (reduce_func):
+        doc['views'][view_name]['reduce'] = reduce_func
     db[docid] = doc
 
 
@@ -216,8 +218,8 @@ def read_lga_geojson_from_couchdb():
         lga_geojson_dict['features'].append(row['value'])
         feature_count += 1
         # TODO delete
-#        if feature_count > 20:
-#            break
+        if feature_count > 20:
+            break
 
     lga_geojson_dict['totalFeatures'] = feature_count
     return lga_geojson_dict

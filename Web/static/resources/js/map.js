@@ -1,6 +1,6 @@
 d3.queue()
 	.defer(d3.json, config.lga_url)
-	.defer(d3.json, config.scenario3_url)
+	.defer(d3.json, config.scenario_url)
 	.await(makeMap);
 
 function makeMap(error, lga, scenario) {
@@ -15,9 +15,9 @@ function makeMap1(lga, scenario) {
 	columns = data.columns;
 	aurin_data = data.aurin_data
 
-	var curr_groups_str = columns.internet_tt_3_percent_6_11_6_11.groups_str;
-	var curr_getter = columns.internet_tt_3_percent_6_11_6_11.getter;
-	var default_c = 'internet_tt_3_percent_6_11_6_11'; // use on first call to legend.update(default_c) and radio button with this id is checked by default
+	var default_c = Object.keys(columns)[0];  // use on first call to legend.update(default_c) and radio button with this id is checked by default
+	var curr_groups_str = columns[default_c].groups_str;
+	var curr_getter = columns[default_c].getter;
 
 	// needed to get a column value by LGA code
 	var lga_code_dimension = aurin_data.dimension(function (d) { return d.lga_code; });

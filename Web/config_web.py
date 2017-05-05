@@ -53,6 +53,37 @@ VIEW_COLUMNS_INFO_MAP = \
     }
     '''
 
+VIEW_TWEETS_MAP = \
+    '''function (doc) {
+        if (doc.lga_code) {
+            emit(doc.lga_code, doc.label);
+        }
+    }
+    '''
+
+VIEW_TWEETS_REDUCE = \
+    '''function (keys, values, rereduce) {
+        var result = {'unhappy': 0, 'neutral': 0, 'happy': 0};
+        if (rereduce) {
+            for (var i=0; i < values.length; i++) {
+                result['unhappy'] += values[i]['unhappy'];
+                result['neutral'] += values[i]['neutral'];
+                result['happy'] += values[i]['happy'];
+            }
+        } else {
+            for (var i=0; i < values.length; i++) {
+                if (values[i] == -1) {
+                    result['unhappy'] += 1;
+                } else if (values[i] == 0) {
+                    result['neutral'] += 1;
+                } else if (values[i] == 1) {
+                    result['happy'] += 1;
+                }
+            }
+        }
+        return result;
+    }
+        '''
 
 def main():
     if (len(sys.argv) != 2):
@@ -66,17 +97,24 @@ def main():
     config['couchdb'] = {'port': '5984',
                          'ip_address': ip_address,
                          'db_name_aurin': 'aurin',
+                         # 'db_name_tweets': 'target_data',
+                         'db_name_tweets': 'train_data_test',
                          'key': 'lga_code',
                          'exclude_lga_code': [29399],
                          'view_geojson': {'docid': '_design/lga',
                                           'view_name': 'features-view',
                                           'map_func': VIEW_GEOJSON_MAP},
-                         'view_aurin_all': {'docid': '_design/aurin-all',
+                         'view_aurin_all': {'docid': '_design/aurin_all',
                                             'view_name': 'collation-view',
                                             'map_func': VIEW_AURIN_ALL_MAP},
                          'view_columns_info': {'docid': '_design/columns_info',
                                                'view_name': 'columns-info-view',
-                                               'map_func': VIEW_COLUMNS_INFO_MAP}
+                                               'map_func': VIEW_COLUMNS_INFO_MAP},
+                         'view_tweets_label_count': {'docid': '_design/tweets_label_count',
+                                                     'view_name': 'tweets-label-count',
+                                                     'map_func': VIEW_TWEETS_MAP,
+                                                     'reduce_func': VIEW_TWEETS_REDUCE},
+                         'scenarios': [2,3]
                          }
 
     config['geojson_file'] = {'lga': DATA_PATH + 'vic-lga.json',
@@ -91,19 +129,30 @@ def main():
                                'profiles_data': {'columns': [['ppl_aged_over_18_who_are_current_smokers_perc', 'Smokers', 'Percentage of people aged over 18 who are current smokers'],
                                                              ['ppl_reporting_being_obese_perc', 'Obesity', 'Percentage of people reported being obese'],
                                                              ['ppl_who_are_members_of_a_sports_grp_perc', 'Sports Group', 'Percentage of members of a sports group'],
-                                                             ['ppl_drink_sugar_sweetened_soft_drink_every_day_perc', 'Soft Drink', 'Percentage of people who drink sugar-sweetened soft drink every day']
+                                                             ['ppl_drink_sugar_sweetened_soft_drink_every_day_perc', 'Soft Drink', 'Percentage of people who drink sugar-sweetened soft drink every day'],
+                                                             ['ppl_who_speak_a_lang_other_english_at_home_perc', 'Non-English Speakers', 'Percentage of People who speak a language other than English at home'],
+                                                             ['ppl_who_rated_their_cmty_as_a_pleasant_env_perc', 'Pleasant Environment', 'Percentage of people who rated their community as a pleasant environment'],
+                                                             ['ppl_who_are_members_of_a_religious_grp_perc', 'Religous Group', 'Percentage of people people who are members of a religious group']
                                                              ],
                                                  # preprocessing action
                                                  'actions': [['group', 3],
                                                              ['group', 3],
                                                              ['group', 3],
-                                                             ['group', 3]],
+                                                             ['group', 3],
+                                                             ['group', 3],
+                                                             ['group', 3],
+                                                             ['group', 3]
+                                                             ],
                                                  # which scenarios the column
                                                  # belong to
                                                  'scenarios': [[3],
                                                                [3],
                                                                [3],
-                                                               [3]]
+                                                               [3],
+                                                               [2],
+                                                               [2],
+                                                               [2],
+                                                               ]
                                                  }
                                }
 

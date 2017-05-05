@@ -1,12 +1,13 @@
 var config = { lga_url : '/data/vic-lga',
-	scenario3_url: '/data/scenario3',
+	scenario_url: '/data/scenario/' + data['which_scenario'],
 	melb_coordinates : [-37.8136, 144.9631],
 	vic_coordinates : [-37.4713, 144.7852],
 	// group_color: ['#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177'],
 	group_color: ['#fde0dd', '#fa9fb5', '#c51b8a'],
 	null_color: '#737373',
 	decimal_places: 2,
-	number_str_size: 5  // length of the string representation of a number
+	number_str_size: 5,  // length of the string representation of a number
+	index_to_category: {0: 'Low', 1: 'Medium', 2: 'High'}
 }
 
 

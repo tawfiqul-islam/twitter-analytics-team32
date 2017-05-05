@@ -5,23 +5,41 @@ from flask import Response
 from lga import read_lga_geojson_from_couchdb
 from aurin_data import read_scenario_from_couchdb
 import json
+import configparser
+from ast import literal_eval
 
 
-# TODO config file
-DATA_PATH = './static/resources/data/'
-FILENAME_LGA = 'vic-lga.json'
+config = configparser.ConfigParser()
+config.read('../Web/config_web.ini')
+
+SCENARIOS = literal_eval(config['couchdb']['scenarios'])
+
 
 app = Flask(__name__)
 
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+def is_valid_scenario(n):
+    if n in SCENARIOS:
+        return True
+    return False
 
 
-@app.route('/scenario1_graphs')
-def scenario1_graphs():
-    return render_template('scenario1_graphs.html')
+@app.route('/scenario_map/<n>')
+def index(n):
+    n = int(n)
+    if (is_valid_scenario(n)):
+        data = {'which_scenario': n}
+        return render_template('scenario_map.html', data=data)
+    return 'TODO handle error'
+
+
+@app.route('/scenario_graphs/<n>')
+def scenario1_graphs(n):
+    n = int(n)
+    if (is_valid_scenario(n)):
+        data = {'which_scenario': n}
+        return render_template('scenario_graphs.html', data=data)
+    return 'TODO handle error'
 
 
 @app.route('/data/vic-lga')
@@ -34,10 +52,13 @@ def data_vic_lga():
     return Response(json.dumps(lga_geojson, separators=(',', ':')), status=200, mimetype='application/json')
 
 
-@app.route('/data/scenario3')
-def data_scenario1():
-    aurin_list = read_scenario_from_couchdb(3)
-    return jsonify(aurin_list)
+@app.route('/data/scenario/<n>')
+def data_scenario(n):
+    n = int(n)
+    if (is_valid_scenario(n)):
+        aurin_list = read_scenario_from_couchdb(n)
+        return jsonify(aurin_list)
+    return 'TODO handle error'
 
 
 if __name__ == '__main__':
