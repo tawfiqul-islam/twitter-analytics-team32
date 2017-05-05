@@ -33,5 +33,5 @@ config['VMTag'] = {'VM1' : '115.146.92.169',
                    'VM4' : '115.146.92.169'}
 
 
-with open('config.ini', 'w') as configfile:
+with open('../config.ini', 'w') as configfile:
     config.write(configfile)

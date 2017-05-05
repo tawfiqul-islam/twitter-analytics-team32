@@ -63,7 +63,7 @@ class UserCrawler():
     def add_tweets(self):
 
         try:
-            doc = self.userdb[userID]
+            doc = self.userdb[self.userID]
         except couchdb.http.ResourceNotFound as e:
             #some sync issue has occured probably, expected so move on
             return
@@ -71,7 +71,7 @@ class UserCrawler():
         if self.maxID < 0:
             #first run through
             try:
-                status_list = api.user_timeline(userID,count=100)
+                status_list = api.user_timeline(self.userID,count=100)
             except tweepy.error.TweepError:
                 #some users will not allow their timelines viewed or have been deleted
                 #remove as not useful
@@ -79,10 +79,10 @@ class UserCrawler():
                 return
             except tweepy.error.RateLimitError:
                 time.sleep(1000)
-                status_list = api.user_timeline(userID,count=100)
+                status_list = api.user_timeline(self.userID,count=100)
         else:
             try:
-                status_list = api.user_timeline(userID,count=100,max_id=self.maxID)
+                status_list = api.user_timeline(self.userID,count=100,max_id=self.maxID)
             except tweepy.error.TweepError as e:
                 #some users will not allow their timelines viewed or have been deleted
                 #remove as not useful

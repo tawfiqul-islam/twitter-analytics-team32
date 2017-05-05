@@ -8,6 +8,9 @@ import argparse
 import configparser
 import json
 import couchdb
+import twitter_stream
+import twitter_user_search
+import twitter_location_search
 from  twitter_stream import MyListener
 from twitter_user_search import UserCrawler
 from twitter_location_search import LocationCrawler
@@ -28,15 +31,15 @@ if __name__ == '__main__':
 
     #Set up configuration
     config = configparser.ConfigParser()
-    config.read('config.ini')
+    config.read('../config.ini')
 
     auth = OAuthHandler(config['Harvest']['ConsumerKey'], config['Harvest']['ConsumerSecret'])
     auth.set_access_token(config['Harvest']['AccessToken'], config['Harvest']['AccesTokenSecret'])
-    api = tweepy.API(auth)
     couch = couchdb.Server( config['Harvest']['DatabaseIP'])
     databasename = config['Stream']['DatabaseName']
     userdatabase = databasename + 'user'
     locationdatabase = databasename + 'location'
+
 
     #find rank based on IP
     my_ip = [(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
@@ -65,6 +68,8 @@ if __name__ == '__main__':
     if my_rank == 'vm2':
         #STREAMER
         twitter_stream = Stream(auth, MyListener(db=db,args=args,userdb=userdb,locationdb=locationdb))
+        api = tweepy.API(auth)
+        twitter_stream.api = api
 
         #This is the bounding box within which we want tweets
         boundingbox = config['Stream']['Location']
@@ -78,6 +83,8 @@ if __name__ == '__main__':
 
     elif my_rank == 'vm3':
         #LOCATION SEARCHER
+        api = tweepy.API(auth, parser=tweepy.parsers.JSONParser())
+        twitter_location_search.api = api
         while True:
             couch = couchdb.Server( config['Harvest']['DatabaseIP'])
             locationdb = couch[locationdatabase]
@@ -92,6 +99,9 @@ if __name__ == '__main__':
 
     elif my_rank == 'vm4':
         #USER SEARCHER
+        api = tweepy.API(auth)
+        twitter_user_search.api = api
+
         while True:
             couch = couchdb.Server( config['Harvest']['DatabaseIP'])
             userdb = couch[userdatabase]
