@@ -10,7 +10,7 @@ from math import radians, cos, sin, asin, sqrt
 
 
 config = configparser.ConfigParser()
-config.read('./config_web.ini')
+config.read('../Web/config_web.ini')
 
 COUCHDB_URL = config['couchdb']['ip_address'] + ':' + config['couchdb']['port']
 COUCHDB_NAME = config['couchdb']['db_name_aurin']

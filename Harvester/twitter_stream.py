@@ -14,7 +14,6 @@ from tweepy import Stream
 from tweepy import OAuthHandler
 from tweepy.streaming import StreamListener
 import configparser
-import string
 import json
 import couchdb
 import argparse

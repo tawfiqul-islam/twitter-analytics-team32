@@ -24,10 +24,10 @@
 import tweepy
 from tweepy import OAuthHandler
 import configparser
-import string
 import json
 import couchdb
 import argparse
+import sleep
 
 class UserCrawler():
     def __init__(self, userdb, db, args, maxtweets=None, locationdb=None,userID=None):
@@ -68,21 +68,18 @@ class UserCrawler():
             #some sync issue has occured probably, expected so move on
             return
 
-        #TODO: remove this rubbish, wth is going on
-        if len(self.userID) > 12:
-            print(self.userID)
-            self.userdb.delete(doc)
-            return
-
         if self.maxID < 0:
             #first run through
             try:
                 status_list = api.user_timeline(userID,count=100)
-            except tweepy.error.TweepError as e:
+            except tweepy.error.TweepError:
                 #some users will not allow their timelines viewed or have been deleted
                 #remove as not useful
                 self.userdb.delete(doc)
                 return
+            except tweepy.error.RateLimitError:
+                time.sleep(1000)
+                status_list = api.user_timeline(userID,count=100)
         else:
             try:
                 status_list = api.user_timeline(userID,count=100,max_id=self.maxID)

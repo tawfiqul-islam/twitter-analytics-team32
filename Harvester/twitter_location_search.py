@@ -18,10 +18,10 @@
 import tweepy
 from tweepy import OAuthHandler
 import configparser
-import string
 import json
 import couchdb
 import argparse
+import sleep
 
 
 class LocationCrawler():
@@ -69,10 +69,14 @@ class LocationCrawler():
         if self.maxID > 0:
             try:
                 status_list = (api.search(q=query,count=100))['statuses']
-            except tweepy.error.TweepError as e:
+            except tweepy.error.TweepError:
                 #bad location, remove from db
                 self.locationdb.delete(doc)
                 return
+            except tweepy.error.RateLimitError:
+                time.sleep(1000)
+                status_list = (api.search(q=query,count=100))['statuses']
+        else:
         else:
             try:
                 status_list = (api.search(q=query,count=100,max_id=self.maxID))['statuses']
