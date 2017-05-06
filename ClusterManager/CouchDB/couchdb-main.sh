@@ -6,6 +6,8 @@ sudo apt-get --no-install-recommends -y install curl
 
 sudo apt-get --no-install-recommends -y install python-pip
 
+sudo apt-get --no-install-recommends -y install vim
+
 sudo pip install -U pip setuptools
 
 sudo pip install --upgrade pip
@@ -17,6 +19,7 @@ sudo pip install couchdb
 sudo pip install tweepy
 
 sudo pip install jsonpickle
+
 
 sudo sh install-couchdb.sh
 
