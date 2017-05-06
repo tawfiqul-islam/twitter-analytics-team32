@@ -35,7 +35,7 @@ def configcouchdb(ipaddress):
 	config['admins'] = {}
 
 
-	with open('local1.ini', 'w') as configfile:
+	with open('local.ini', 'w') as configfile:
 		config.write(configfile)
 
 	return
