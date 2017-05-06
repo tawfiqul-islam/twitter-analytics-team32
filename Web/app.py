@@ -34,11 +34,20 @@ def index(n):
 
 
 @app.route('/scenario_graphs/<n>')
-def scenario1_graphs(n):
+def scenario_graphs(n):
     n = int(n)
     if (is_valid_scenario(n)):
         data = {'which_scenario': n}
         return render_template('scenario_graphs.html', data=data)
+    return 'TODO handle error'
+
+
+@app.route('/scenario_graphs_bar/<n>')
+def scenario_graphs_bar(n):
+    n = int(n)
+    if (is_valid_scenario(n)):
+        data = {'which_scenario': n, 'type': 'bar'}
+        return render_template('scenario_graphs_bar.html', data=data)
     return 'TODO handle error'
 
 

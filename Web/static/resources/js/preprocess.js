@@ -65,7 +65,7 @@ function toCategorical(rows, column_infos) {
 }
 
 
-function preprocess(scenario, need_dim_group) {
+function preprocess(scenario, need_dim_group, to_categorical) {
 	// 'need_group_dim' is a flag to determine whether we need to add a crossfilter dimension and group into element in 'columns'
 
 	// return all the properties in object 'l'
@@ -76,10 +76,11 @@ function preprocess(scenario, need_dim_group) {
 		}
 		return result
 	}
+	
+	var rows = scenario.rows;
+	if (to_categorical) { rows = toCategorical(scenario.rows, scenario.column_infos); }
 
-	rows_categorical = toCategorical(scenario.rows, scenario.column_infos);
-
-	var aurin_data = crossfilter(rows_categorical);
+	var aurin_data = crossfilter(rows);
 
 	// property: column name
 	// value: an object with properties: getter, title, detail, groups, groups_str (and optionally, dimension and group)
@@ -106,5 +107,5 @@ function preprocess(scenario, need_dim_group) {
 
 		columns[col] = curr;
 	}
-	return {columns: columns, aurin_data: aurin_data};
+	return {columns: columns, data: aurin_data};
 }

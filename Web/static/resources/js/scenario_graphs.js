@@ -1,19 +1,21 @@
 
-
-console.log(data)
 d3.queue()
 	.defer(d3.json, config.scenario_url)
 	.await(makeGraphs);
 
 function makeGraphs(error, scenario) {
-	makeGraphs3(scenario);
+	if (data.type == 'bar') {
+		makeBarGraphs(scenario);
+	} else {
+		makeGraphs3(scenario);
+	}
 }
 
 
 function makeGraphs1(scenario) {
 	var data = preprocess(scenario, true); // see preprocess.js
 	var columns = data.columns;
-	var aurin_data = data.aurin_data
+	var aurin_data = data.data
 
 	console.log('Draws ' + Object.keys(columns).length + ' graphs');
 
@@ -34,6 +36,195 @@ function makeGraphs1(scenario) {
 
 	dc.renderAll();
 }
+
+
+// scatter matrix
+function makeGraphs5(scenario) {
+	var data = crossfilter(scenario.rows);
+
+	// adapted from
+	// https://github.com/dc-js/dc.js/blob/master/web/examples/splom.html
+
+	var fields = Object.keys(scenario.column_infos);
+	var rows = ['heading'].concat(fields.slice(0).reverse()),
+		cols = ['heading'].concat(fields);
+
+	function make_dimension(var1, var2) {
+		return data.dimension(function(d) {
+			return [d[var1], d[var2], d.lga_name]; // TODO no need to return third element
+		});
+	}
+
+	function key_part(i) {
+		return function(kv) {
+			return kv.key[i];
+		};
+	}
+
+	var charts = [];
+	d3.select('#table-content')
+		.selectAll('tr').data(rows)
+		.enter().append('tr').attr('class', function(d) {
+			return d === 'heading' ? 'heading row' : 'row';
+		})
+		.each(function(row, y) {
+			d3.select(this).selectAll('td').data(cols)
+				.enter().append('td').attr('class', function(d) {
+					return d === 'heading' ? 'heading entry' : 'entry';
+				})
+				.each(function(col, x) {
+					var cdiv = d3.select(this).append('div')
+					if(row === 'heading') {
+						if(col !== 'heading') // dont want to put text on top left corner
+							cdiv.text(scenario.column_infos[col].detail)
+						return; // dont want to add chart here
+					}
+					else if(col === 'heading') {
+						cdiv.text(scenario.column_infos[row].detail)
+						return; // dont want to add chart here
+					}
+					cdiv.attr('class', 'chart-holder');
+					var chart = dc.scatterPlot(cdiv);
+					var dim = make_dimension(col,row),
+						group = dim.group();
+
+					// only want to show axis at left and bottom sub graphs
+					var showYAxis = x === 1, showXAxis = y === Object.keys(scenario.column_infos).length;
+
+					chart
+						.transitionDuration(0)
+						.width(200 + (showYAxis?25:0))
+						.height(200 + (showXAxis?20:0))
+						.margins({
+							left: showYAxis ? 25 : 8,
+							top: 5,
+							right: 0,
+							bottom: showXAxis ? 20 : 5
+						})
+						.dimension(dim).group(group)
+						.keyAccessor(key_part(0))
+						.valueAccessor(key_part(1))
+
+					//-------------------------------------
+						//.colorAccessor(key_part(2))
+						//.colorDomain(['setosa', 'versicolor', 'virginica'])
+					//-------------------------------------
+
+						.x(d3.scale.linear()).xAxisPadding("0.001%")
+						.y(d3.scale.linear()).yAxisPadding("0.001%")
+						.brushOn(true)
+						.elasticX(true)
+						.elasticY(true)
+						.symbolSize(7)
+						.nonemptyOpacity(0.7)
+						.emptySize(7)
+						.emptyColor('#ccc')
+						.emptyOpacity(0.7)
+						.excludedSize(7)
+						.excludedColor('#ccc')
+						.excludedOpacity(0.7)
+						.renderHorizontalGridLines(true)
+						.renderVerticalGridLines(true);
+					chart.xAxis().ticks(6);
+					chart.yAxis().ticks(6);
+					chart.on('postRender', function(chart) {
+						// remove axes unless at left or bottom
+						if(!showXAxis)
+							chart.select('.x.axis').attr('display', 'none');
+						if(!showYAxis)
+							chart.select('.y.axis').attr('display', 'none');
+						// remove clip path, allow dots to display outside
+						chart.select('.chart-body').attr('clip-path', null);
+					});
+					// only filter on one chart at a time
+					chart.on('filtered', function(_, filter) {
+						if(!filter)
+							return;
+						charts.forEach(function(c) {
+							if(c !== chart)
+								c.filter(null);
+						});
+					});
+					charts.push(chart);
+				});
+		});
+	dc.renderAll();
+}
+
+
+function makeBarGraphs(scenario) {
+	var p = preprocess(scenario); // get getter of each column
+	columns = p.columns; // global
+	var data = p.data;
+
+	lga_dim1 = data.dimension(function(d) { return d.lga_name; }); // global
+	lga_dim2 = data.dimension(function(d) { return d.lga_name; }); // global, same as above so that the 2 graphs can filter each other
+
+	// create a group for each column
+	groups1 = {};
+	groups2 = {};
+	for (var c in columns) {
+		groups1[c] = lga_dim1.group().reduceSum(columns[c].getter);
+		groups2[c] = lga_dim2.group().reduceSum(columns[c].getter);
+	}
+
+	chart1 = dc.barChart('#bar-graph-1'); // global
+	chart2 = dc.barChart('#bar-graph-2'); // global
+
+	// write the options
+	function writeOptions(select, selected) {
+		for (var c in columns) {
+			if (c == selected) {
+				select.innerHTML += '<option value="' + c + '" selected="selected">' + columns[c].detail
+			} else {
+				select.innerHTML += '<option value="' + c + '">' + columns[c].detail
+			}
+		}
+	}
+
+	writeOptions(document.getElementById('opt-bar-graph-1'), Object.keys(columns)[0]);
+	writeOptions(document.getElementById('opt-bar-graph-2'), Object.keys(columns)[1]);
+
+	//drawBarGraph(1, Object.keys(columns)[0]);
+	//drawBarGraph(2, Object.keys(columns)[1]);
+	optionOnChange(1);
+	optionOnChange(2);
+}
+
+function drawBarGraph(which_chart, c) {
+	var chart = chart1;
+	var groups = groups1;
+	var lga_dim = lga_dim1;
+	if (which_chart == 2) { 
+		chart = chart2; 
+		groups = groups2;
+		lga_dim = lga_dim2;
+	};
+	chart
+		.width(1300)
+		.height(300)
+		.x(d3.scale.ordinal())
+		.xUnits(dc.units.ordinal)
+		.brushOn(false)
+		.xAxisLabel('', 80) // 80 is bottom margin
+		//.yAxisLabel('', 0)
+		.dimension(lga_dim)
+		.barPadding(0.1)
+		.outerPadding(0.05)
+		.elasticY(true)
+		.group(groups[c]);
+	//.ordering(function (d) { return -d.value; });
+
+	chart.render();
+}
+
+function optionOnChange(n) {
+	console.log(n)
+	var selected = document.getElementById('opt-bar-graph-' + n).value;
+	console.log(selected)
+	drawBarGraph(n, selected);
+}
+
 
 function makeGraphs3(scenario) {
 	categorical_rows = toCategorical(scenario.rows, scenario.column_infos);
@@ -73,7 +264,7 @@ function makeGraphs3(scenario) {
 	curr_separator += ' ';
 	y_labels.push(curr_separator);
 
-	var margin = {top: 20, right: 600, bottom: 30, left: 200},
+	var margin = {top: 20, right: 600, bottom: 30, left: 100},
 		width = 2500 - margin.left - margin.right,
 		height = 600 - margin.top - margin.bottom;
 

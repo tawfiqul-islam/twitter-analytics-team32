@@ -26,7 +26,7 @@ LGA_GEOJSON_DOC_TYPE = config['geojson_file']['doc_type']
 # needed to get the lga area code
 FILENAME_INTERNET_ACCESS = config['aurin_json_files']['internet_access']
 
-VIEW_GEOJSON = literal_eval(config['couchdb']['view_geojson'])
+D_DOC_LGA = literal_eval(config['couchdb']['d_doc_lga'])
 
 
 # TODO read from couchdb
@@ -168,19 +168,6 @@ def upload_lga_geojson(db):
         curr_doc['columns']['geometry'] = feature['geometry']
         db.save(curr_doc)
 
-    create_view(db, VIEW_GEOJSON['docid'], VIEW_GEOJSON['view_name'], VIEW_GEOJSON['map_func'])
-
-
-def create_view(db, docid, view_name, map_func, reduce_func=False):
-    doc = {}
-    doc['views'] = {}
-    doc['views'][view_name] = {'map': map_func}
-    doc['language'] = 'javascript'
-    # TODO handle reduce_func
-    if (reduce_func):
-        doc['views'][view_name]['reduce'] = reduce_func
-    db[docid] = doc
-
 
 # copied from
 # http://stackoverflow.com/questions/15736995/how-can-i-quickly-estimate-the-distance-between-two-latitude-longitude-points
@@ -212,7 +199,7 @@ def read_lga_geojson_from_couchdb():
     lga_geojson_dict['type'] = 'FeatureCollection'
     feature_count = 0
 
-    for row in db.view('%s/_view/%s' % (VIEW_GEOJSON['docid'], VIEW_GEOJSON['view_name'])):
+    for row in db.view('%s/_view/%s' % (D_DOC_LGA['_id'], 'features-view')):
         row['value']['properties'][COUCHDB_KEY] = row['key']
         row['value']['type'] = 'Feature'
         lga_geojson_dict['features'].append(row['value'])
@@ -300,8 +287,3 @@ class LGA:
                                        miny)
             result[lga_name] = curr
         return result
-
-
-# TODO delete
-ans = ['east gippsland', 'towong', 'bass coast', 'bass coast']
-ls = [(147.949, -37.585), (147.534, -36.562), (145.22, -38.48), (145.6, -38.5)]

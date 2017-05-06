@@ -4,7 +4,7 @@ import configparser
 
 DATA_PATH = './static/resources/data/'
 
-VIEW_GEOJSON_MAP = \
+MAP_GEOJSON = \
     '''function (doc) {
         if (doc.doc_type == 'lga_geojson_feature') {
             emit(doc.lga_code, doc.columns);
@@ -12,7 +12,7 @@ VIEW_GEOJSON_MAP = \
         }
     '''
 
-VIEW_AURIN_ALL_MAP = \
+MAP_AURIN_ALL = \
     '''function (doc) {
         if (doc.lga_code == 0 || doc.doc_type == 'columns_info') {
             // skip these
@@ -38,7 +38,7 @@ VIEW_AURIN_ALL_MAP = \
         }
     '''
 
-VIEW_COLUMNS_INFO_MAP = \
+MAP_COLUMNS_INFO = \
     '''function (doc) {
         if (doc.doc_type == 'columns_info') {
             for (var f in doc.columns_info) {
@@ -53,7 +53,7 @@ VIEW_COLUMNS_INFO_MAP = \
     }
     '''
 
-VIEW_TWEETS_MAP = \
+MAP_TWEETS = \
     '''function (doc) {
         if (doc.lga_code) {
             emit(doc.lga_code, doc.label);
@@ -61,7 +61,7 @@ VIEW_TWEETS_MAP = \
     }
     '''
 
-VIEW_TWEETS_REDUCE = \
+REDUCE_TWEETS = \
     '''function (keys, values, rereduce) {
         var result = {'unhappy': 0, 'neutral': 0, 'happy': 0};
         if (rereduce) {
@@ -83,11 +83,20 @@ VIEW_TWEETS_REDUCE = \
         }
         return result;
     }
-        '''
+    '''
+
+MAP_TWEETS_TAG_1 = \
+    '''function (doc) {
+        if (doc.lga_code && doc.tag1) {
+            emit(doc.lga_code, doc.label);
+        }
+    }
+    '''
+
 
 def main():
     if (len(sys.argv) != 2):
-        print("Please provide couchdb's ip address without port number")
+        print("Please provide couchdb's ip address without port number, e.g. http://127.0.0.1")
         sys.exit(1)
 
     ip_address = sys.argv[1]
@@ -97,24 +106,28 @@ def main():
     config['couchdb'] = {'port': '5984',
                          'ip_address': ip_address,
                          'db_name_aurin': 'aurin',
+                         # TODO
                          # 'db_name_tweets': 'target_data',
                          'db_name_tweets': 'train_data_test',
-                         'key': 'lga_code',
-                         'exclude_lga_code': [29399],
-                         'view_geojson': {'docid': '_design/lga',
-                                          'view_name': 'features-view',
-                                          'map_func': VIEW_GEOJSON_MAP},
-                         'view_aurin_all': {'docid': '_design/aurin_all',
-                                            'view_name': 'collation-view',
-                                            'map_func': VIEW_AURIN_ALL_MAP},
-                         'view_columns_info': {'docid': '_design/columns_info',
-                                               'view_name': 'columns-info-view',
-                                               'map_func': VIEW_COLUMNS_INFO_MAP},
-                         'view_tweets_label_count': {'docid': '_design/tweets_label_count',
-                                                     'view_name': 'tweets-label-count',
-                                                     'map_func': VIEW_TWEETS_MAP,
-                                                     'reduce_func': VIEW_TWEETS_REDUCE},
-                         'scenarios': [2,3]
+                         'key': 'lga_code',  # an emitted key from a map function should at least have this value
+                         'exclude_lga_code': [29399],  # this is the code for unincorporated areas
+                         'd_doc_lga': {'_id': '_design/lga',
+                                       'views': {'features-view': {'map': MAP_GEOJSON}
+                                                 }
+                                       },
+                         'd_doc_scenario': {'_id': '_design/scenario',
+                                            'views': {'collation-view': {'map': MAP_AURIN_ALL},
+                                                      'columns-view': {'map': MAP_COLUMNS_INFO}
+                                                      }
+                                            },
+                         'd_doc_tweets': {'_id': '_design/tweets',
+                                          'views': {'tweets-label-count': {'map': MAP_TWEETS,
+                                                                           'reduce': REDUCE_TWEETS},
+                                                    'tweets-tag1': {'map': MAP_TWEETS_TAG_1,
+                                                                    'reduce': REDUCE_TWEETS}  # share the same reduce function
+                                                    }
+                                          },
+                         'scenarios': [2, 3]
                          }
 
     config['geojson_file'] = {'lga': DATA_PATH + 'vic-lga.json',
@@ -126,6 +139,7 @@ def main():
     config['aurin_columns'] = {'internet_access': {'columns': [['internet_tt_3_percent_6_11_6_11', 'Internet Access', 'Percentage of Private Dwellings with Internet Connections']],
                                                    'actions': [['group', 3]],
                                                    'scenarios': [[3]]},
+                               # the value in key 'columns' is an array of size three that shows the property name in json file, a short detail, and a longer detail
                                'profiles_data': {'columns': [['ppl_aged_over_18_who_are_current_smokers_perc', 'Smokers', 'Percentage of people aged over 18 who are current smokers'],
                                                              ['ppl_reporting_being_obese_perc', 'Obesity', 'Percentage of people reported being obese'],
                                                              ['ppl_who_are_members_of_a_sports_grp_perc', 'Sports Group', 'Percentage of members of a sports group'],
@@ -156,7 +170,7 @@ def main():
                                                  }
                                }
 
-    config['aurin_preprocessing'] = {'decimal_places': 2}
+    config['aurin_preprocessing'] = {'decimal_places': 2}  # the accuracy of the values that will be shown in the web
 
     with open('config_web.ini', 'w') as configfile:
         config.write(configfile)

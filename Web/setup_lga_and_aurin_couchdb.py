@@ -1,10 +1,8 @@
-import sys
 from ast import literal_eval
 import configparser
 import couchdb
 from aurin_data import upload_all_aurin_data
 from lga import upload_lga_geojson
-from lga import create_view
 
 
 config = configparser.ConfigParser()
@@ -14,7 +12,17 @@ COUCHDB_URL = config['couchdb']['ip_address'] + ':' + config['couchdb']['port']
 COUCHDB_NAME_AURIN = config['couchdb']['db_name_aurin']
 COUCHDB_NAME_TWEETS = config['couchdb']['db_name_tweets']
 
-VIEW_TWEETS_LABEL_COUNT = literal_eval(config['couchdb']['view_tweets_label_count'])
+D_DOC_LGA = literal_eval(config['couchdb']['d_doc_lga'])
+D_DOC_SCENARIO = literal_eval(config['couchdb']['d_doc_scenario'])
+D_DOC_TWEETS = literal_eval(config['couchdb']['d_doc_tweets'])
+
+
+def create_view(db, design_doc):
+    try:
+        db.save(design_doc)
+    except couchdb.http.ResourceConflict:
+        print('Warning, the following design doc already exists in %s' % (db))
+        print(design_doc)
 
 
 if __name__ == '__main__':
@@ -35,19 +43,18 @@ if __name__ == '__main__':
 
     upload_lga_geojson(db)
 
-    db = couch[COUCHDB_NAME_TWEETS]
+    create_view(db, D_DOC_SCENARIO)
+    create_view(db, D_DOC_LGA)
 
     try:
-        create_view(db,
-                    VIEW_TWEETS_LABEL_COUNT['docid'],
-                    VIEW_TWEETS_LABEL_COUNT['view_name'],
-                    VIEW_TWEETS_LABEL_COUNT['map_func'],
-                    VIEW_TWEETS_LABEL_COUNT['reduce_func'])
-    except couchdb.http.ResourceConflict:
-        pass
+        db = couch[COUCHDB_NAME_TWEETS]
+    except couchdb.http.ResourceNotFound:
+        db = couch.create(COUCHDB_NAME_TWEETS)
+
+    create_view(db, D_DOC_TWEETS)
 
     # TODO delete
     # for row in db.view('%s/_view/%s' % (VIEW_TWEETS_LABEL_COUNT['docid'], VIEW_TWEETS_LABEL_COUNT['view_name']),
-                       # group=True,
-                       # reduce=True):
+    # group=True,
+    # reduce=True):
     # print row['key'], row['value']

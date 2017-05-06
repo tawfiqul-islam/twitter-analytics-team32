@@ -11,16 +11,16 @@ function makeMap(error, lga, scenario) {
 
 function makeMap1(lga, scenario) {
 
-	data = preprocess(scenario); // see preprocess.js
-	columns = data.columns;
-	aurin_data = data.aurin_data
+	var p = preprocess(scenario, false, true); // see preprocess.js
+	columns = p.columns;
+	data = p.data
 
 	var default_c = Object.keys(columns)[0];  // use on first call to legend.update(default_c) and radio button with this id is checked by default
 	var curr_groups_str = columns[default_c].groups_str;
 	var curr_getter = columns[default_c].getter;
 
 	// needed to get a column value by LGA code
-	var lga_code_dimension = aurin_data.dimension(function (d) { return d.lga_code; });
+	var lga_code_dimension = data.dimension(function (d) { return d.lga_code; });
 
 
 	// i is the index of the color

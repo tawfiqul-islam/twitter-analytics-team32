@@ -4,7 +4,6 @@ import sys
 import json
 import couchdb
 from bisect import bisect_right
-from lga import create_view
 
 
 config = configparser.ConfigParser()
@@ -27,8 +26,7 @@ for key in AURIN_COLUMNS:
 DECIMAL_PLACES = int(config['aurin_preprocessing']['decimal_places'])
 ACCURATE_TO = 10 ** -DECIMAL_PLACES
 
-VIEW_AURIN_ALL = literal_eval(config['couchdb']['view_aurin_all'])
-VIEW_COLUMNS_INFO = literal_eval(config['couchdb']['view_columns_info'])
+D_DOC_SCENARIO = literal_eval(config['couchdb']['d_doc_scenario'])
 
 
 def read_json(filename):
@@ -157,8 +155,6 @@ def upload_all_aurin_data(db):
         metadata_filename = aurin_data_filename[:-5] + '_metadata.json'
         key = get_key(metadata_filename)
         upload_aurin_data(db, json_dict, aurin_data_title, key)
-    create_view(db, VIEW_AURIN_ALL['docid'], VIEW_AURIN_ALL['view_name'], VIEW_AURIN_ALL['map_func'])
-    create_view(db, VIEW_COLUMNS_INFO['docid'], VIEW_COLUMNS_INFO['view_name'], VIEW_COLUMNS_INFO['map_func'])
 
 
 def read_scenario_from_couchdb(which_scenario):
@@ -171,7 +167,7 @@ def read_scenario_from_couchdb(which_scenario):
     result = {}
     result['rows'] = []
     curr_lga_code = -1
-    for row in db.view('%s/_view/%s' % (VIEW_AURIN_ALL['docid'], VIEW_AURIN_ALL['view_name']),
+    for row in db.view('%s/_view/%s' % (D_DOC_SCENARIO['_id'], 'collation-view'),
                        startkey=[which_scenario],
                        endkey=[which_scenario+1]):
         if curr_lga_code != row['key'][1]:
@@ -186,7 +182,7 @@ def read_scenario_from_couchdb(which_scenario):
         curr_group[curr_column_name] = row['value'][curr_column_name]
 
     result['column_infos'] = {}
-    for row in db.view('%s/_view/%s' % (VIEW_COLUMNS_INFO['docid'], VIEW_COLUMNS_INFO['view_name']),
+    for row in db.view('%s/_view/%s' % (D_DOC_SCENARIO['_id'], 'columns-view'),
                        startkey=[which_scenario],
                        endkey=[which_scenario+1]):
         curr_column_name = row['key'][1]

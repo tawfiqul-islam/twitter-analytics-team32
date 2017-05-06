@@ -8,6 +8,7 @@ body {
 	width: 800px;
 }
 
+
 /* info at corner of the map */
 /* adapted from http://leafletjs.com/examples/choropleth/ */
 .area-info {
@@ -67,7 +68,32 @@ body {
 }
 
 
-/* #total-area-pie-chart svg { width: 500px; } */
+/* rotate the x ticks */
+.bar-graph .x.axis text {
+	text-anchor: end !important;
+	transform: translate(-13px, 10px) rotate(270deg);
+}
 
 
-
+/* legend for bar chart */
+#container {
+  width: 100px;
+  height: 500px;
+  position: relative;
+}
+#bar-chart {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+#bar-chart-legend {
+  width: 500px;
+  max-width: 500px;
+  height: 30%;
+  position: absolute;
+  bottom: 25%;
+  left: 50px;
+  z-index: 10;
+}
