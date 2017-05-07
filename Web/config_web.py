@@ -55,7 +55,7 @@ MAP_COLUMNS_INFO = \
 
 MAP_TWEETS = \
     '''function (doc) {
-        if (doc.lga_code) {
+        if (doc.lga_code && doc.label != 5) {
             emit(doc.lga_code, doc.label);
         }
     }
@@ -85,10 +85,10 @@ REDUCE_TWEETS = \
     }
     '''
 
-MAP_TWEETS_TAG_1 = \
+MAP_TWEETS_TAG_FOOD = \
     '''function (doc) {
-        if (doc.lga_code && doc.tag1) {
-            emit(doc.lga_code, doc.label);
+        if (doc.lga_code && doc.tag_food) {
+            emit(doc.lga_code, 1);
         }
     }
     '''
@@ -107,8 +107,8 @@ def main():
                          'ip_address': ip_address,
                          'db_name_aurin': 'aurin',
                          # TODO
-                         # 'db_name_tweets': 'target_data',
-                         'db_name_tweets': 'train_data_test',
+                         'db_name_tweets': 'target_data',
+                         # 'db_name_tweets': 'train_data_test',
                          'key': 'lga_code',  # an emitted key from a map function should at least have this value
                          'exclude_lga_code': [29399],  # this is the code for unincorporated areas
                          'd_doc_lga': {'_id': '_design/lga',
@@ -123,8 +123,8 @@ def main():
                          'd_doc_tweets': {'_id': '_design/tweets',
                                           'views': {'tweets-label-count': {'map': MAP_TWEETS,
                                                                            'reduce': REDUCE_TWEETS},
-                                                    'tweets-tag1': {'map': MAP_TWEETS_TAG_1,
-                                                                    'reduce': REDUCE_TWEETS}  # share the same reduce function
+                                                    'tweets-tag-food': {'map': MAP_TWEETS_TAG_FOOD,
+                                                                        'reduce': '_count'}  # share the same reduce function
                                                     }
                                           },
                          'scenarios': [2, 3]

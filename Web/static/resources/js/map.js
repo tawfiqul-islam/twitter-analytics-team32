@@ -8,6 +8,8 @@ function makeMap(error, lga, scenario) {
 	makeMap1(lga, scenario);
 }
 
+var categories = ['Low', 'Medium', 'High'];
+
 
 function makeMap1(lga, scenario) {
 
@@ -164,6 +166,7 @@ function makeMap1(lga, scenario) {
 	}
 
 
+	// legend
 	// adapted from http://leafletjs.com/examples/choropleth/
 	var legend = L.control({position: 'bottomright'});
 	legend.onAdd = function (map) {
@@ -174,13 +177,28 @@ function makeMap1(lga, scenario) {
 
 	legend.update = function (c) {
 		this._div.innerHTML = '<h4>' + columns[c].detail + '</h4>'
+		// currently, each column only have three groups, but this can be easily extended by changing the global variable 'categories'
+		if (curr_groups_str.length != categories.length) { console.log("Warning, number of groups is more than three"); }
 		for (var i = 0; i < curr_groups_str.length; i++) {
 			this._div.innerHTML += '<i style="background:' + getColor(i) + '"></i> ';
-			this._div.innerHTML += curr_groups_str[i] + '<br>';
+			this._div.innerHTML += categories[i] + '<br>';
+			//this._div.innerHTML += curr_groups_str[i] + '<br>';
 		}
 	}
 
 	legend.addTo(my_map);
+
+
+	// emoji
+	var emoji = L.icon({
+		iconUrl: '../static/resources/data/emoji_happy.png',
+
+		iconSize:     [16, 16], // size of the icon
+		iconAnchor:   [8, 8], // point of the icon which will correspond to marker's location
+		popupAnchor:  [0, 0] // point from which the popup should open relative to the iconAnchor
+	});
+	L.marker(config.melb_coordinates, {icon: emoji}).addTo(my_map);
+	
 
 	// set which radio button is checked at the beginning
 	document.getElementById(default_c).checked = true

@@ -3,6 +3,11 @@
 		<meta charset="utf-8">
 
 		<title>COMP90024 Team 32</title>
+
+		<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+		<link rel="stylesheet" type="text/css" href="../static/lib/css/bootstrap.min.css" />
+		<link rel="stylesheet" type="text/css" href="../static/lib/css/keen-dashboards.css" />
+
 		<link rel="stylesheet" href="../static/resources/css/my.css" />
 		<link rel="stylesheet" href="../static/lib/css/dc.min.css" />
 		<script type="text/javascript">
@@ -12,28 +17,96 @@
 
 	</head>
 
-	<body>
+	<body class="application">
 
-		<select id="opt-bar-graph-1" onchange="optionOnChange(1)">
-		</select>
 
-		<div class='bar-graph' id="bar-graph-1"></div>
-		<br/>
 
-		<select id="opt-bar-graph-2" onchange="optionOnChange(2)">
-		</select>
+		<div class="navbar navbar-inverse navbar-custom" id="my-navbar" role="navigation">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+						<span class="sr-only">Toggle navigation</span>
+						<!--<span class="icon-bar"></span>-->
+						<!--<span class="icon-bar"></span>-->
+						<!--<span class="icon-bar"></span>-->
+					</button>
+					<!--<a class="navbar-brand" href="../">-->
+					<!--<span class="glyphicon glyphicon-chevron-left"></span>-->
+					<!--</a>-->
+					<a class="navbar-brand" href="/">Team 32</a>
+				</div>
+				<div class="navbar-collapse collapse">
+					<ul class="nav navbar-nav navbar-left">
+						<!--<li><a href="https://keen.io">Home</a></li>-->
 
-		<div class='bar-graph' id="bar-graph-2"></div>
-		<br/>
-		<!--<div id="scenario_graph3"></div>-->
-		<!--<br/>-->
-		<!--<div id="scenario_graph4"></div>-->
-		<!--<br/>-->
-		<!--<div id="scenario_graph5"></div>-->
-		<!--<br/>-->
-		<!--<div id="scenario_graph6"></div>-->
-		<!--<br/>-->
+						<li class="nav-item dropdown">
+							<a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">Scenario 3
+								<span class="caret"></span>
+							</a>
+							<ul class="dropdown-menu">
+								<li><a class="dropdown-item" href="/scenario_map/3">Map</a></li>
+								<li><a class="dropdown-item" href="/scenario_graphs_bar/3">Bar Chart</a></li>
+								<li><a class="dropdown-item" href="/data/scenario/3">Data</a></li>
+							</ul>
+						</li>
 
+
+
+						<li class="nav-item"><a class="nav-link" href="#">TODO1</a></li>
+						<li class="nav-item"><a class="nav-link" href="#">TODO2</a></li>
+						<li class="nav-item"><a class="nav-link" href="#">TODO3</a></li>
+						<!--<li class="nav-item"><a class="nav-link" href="#">TODO4</a></li>-->
+					</ul>
+				</div>
+			</div>
+		</div>
+
+
+
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-12">
+					<div class="chart-wrapper">
+						<div class="chart-title">
+							<select id="opt-bar-graph-1" onchange="optionOnChange(1)"></select>
+						</div>
+						<div class="chart-stage">
+
+							<div class="bar-graph-container">
+								<div class="bar-graph" id="bar-graph-1"></div>
+							</div>
+
+						</div>
+						<div class="chart-notes">
+							DESCRIPTION TODO
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-sm-12">
+					<div class="chart-wrapper">
+						<div class="chart-title">
+							<select id="opt-bar-graph-2" onchange="optionOnChange(2)"></select>
+						</div>
+						<div class="chart-stage">
+
+							<div class="bar-graph-container">
+								<div class="bar-graph" id="bar-graph-2"></div>
+							</div>
+
+						</div>
+						<div class="chart-notes">
+							DESCRIPTION TODO
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<hr>
+			<p class="small text-muted">Built with &#9829; by <a href="https://keen.io">Keen IO</a></p>
+		</div>
 
 
 		<script src="../static/lib/js/d3.js"> type="text/javascript"></script>
@@ -42,6 +115,15 @@
 		<script src="../static/lib/js/d3-queue.min.js"> type="text/javascript"></script>
 		<script src="../static/resources/js/preprocess.js"> type="text/javascript"></script>
 		<script src="../static/resources/js/scenario_graphs.js"> type="text/javascript"></script>
+		<script src="../static/resources/js/navbar.js"> type="text/javascript"></script>
+
+		<script src="../static/lib/js/jquery.min.js"></script>
+		<script src="../static/lib/js/bootstrap.min.js"></script>
+		<script src="../static/lib/js/holder.js"></script>
+		<script>
+			Holder.add_theme("white", { background:"#fff", foreground:"#a7a7a7", size:10 });
+		</script>
+		<script src="../static/lib/js/keen.min.js"></script>
 	</body>
 </html>
 

@@ -1,11 +1,10 @@
 /* default font for body */
-body {
-	font-family: Arial, Helvetica, sans-serif;
+body.application {
+	padding-top: 0px; /* so that navbar is at top */
 }
 
 #mapid {
-	height: 500px;
-	width: 800px;
+	height: 70vh;
 }
 
 
@@ -31,8 +30,9 @@ body {
 	font-size: 1.05em;
 }
 .area-info i {
-	width: 12px;
-	height: 12px;
+	width: 13px;
+	height: 13px;
+	margin: 2px 8px 2px 0px;
 	float: left;
 	margin-right: 8px;
 	opacity: 0.7;
@@ -42,12 +42,13 @@ body {
 
 /* column selection at corner of the map */
 .column-selection {
-	padding: 0px 10px 10px; /* top (right,left) bottom */
+	padding: 0px 10px 10px 7; /* top right bottom left */
 	font-size: 1em;
 	background: rgba(255,255,255,0.8);
 	box-shadow: 0 0 15px rgba(0,0,0,0.2); /* h-shadow v-shadow blur-distance color */
 	border-radius: 5px;
 }
+.column-selection input{ margin:3; } /* for radio button */
 
 
 /* adapted from http://leafletjs.com/examples/choropleth/ */
@@ -60,10 +61,10 @@ body {
 	font-size: 1.1em;
 }
 .legend i {
-	width: 15px;
-	height: 15px;
+	width: 16px;
+	height: 16px;
+	margin: 2px 8px 2px 0px;
 	float: left;
-	margin-right: 10px;
 	opacity: 0.7;
 }
 
@@ -76,24 +77,58 @@ body {
 
 
 /* legend for bar chart */
-#container {
-  width: 100px;
-  height: 500px;
-  position: relative;
+.bar-graph-container {
+	overflow: auto;
+	position: relative;
 }
-#bar-chart {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
+.bar-graph {
+	width: 1250px;
 }
-#bar-chart-legend {
-  width: 500px;
-  max-width: 500px;
-  height: 30%;
-  position: absolute;
-  bottom: 25%;
-  left: 50px;
-  z-index: 10;
+
+
+/* navbar adapted from */
+/* http://stackoverflow.com/questions/18529274/change-navbar-color-in-twitter-bootstrap-3 */
+body.application .navbar-custom {
+    background-color: #193441; /* dark grey */
+    border-radius: 0px;
+	margin-right: -15px; /* to be as large as the .row */
+    margin-left: -15px;
+}
+
+/* change the brand and text color */
+.navbar-custom .navbar-brand,
+.navbar-custom .navbar-text {
+    color: #FCFFF5;
+}
+
+/* change the link color */
+.navbar-custom .navbar-nav .nav-link {
+    color: #FCFFF5; /* white */
+}
+
+/* change the color of active or hovered links */
+.navbar-custom .nav-item.active .nav-link,
+.navbar-custom .nav-item:hover .nav-link {
+    color: #FCFFF5;
+    background-color: #3E606F;
+}
+
+/* for dropdown only - change the color of dropdown */
+.navbar-custom .dropdown-menu {
+	background-color: #193441;
+}
+.navbar-custom .dropdown-item {
+    color: #FCFFF5;
+}
+.navbar-custom .dropdown-item:hover,
+.navbar-custom .dropdown-item:focus {
+    color: #FCFFF5;
+    background-color: #91AA9D; /* light grey */
+}
+
+.navbar-custom .navbar-nav>.open>a,
+.navbar-custom .navbar-nav>.open>a:hover,
+.navbar-custom .navbar-nav>.open>a:focus {
+	background-color: #3E606F; /* med grey */
+	color: #FCFFF5;
 }

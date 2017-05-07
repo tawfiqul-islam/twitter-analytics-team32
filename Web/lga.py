@@ -152,10 +152,12 @@ def get_lga_geojson():
             # code does not exist
             lga_code = 0
         feature['properties']['lga_code'] = lga_code
+        # TODO add centroid
+        s = shape(feature['geometry'])
+        feature['properties']['centroid'] = [s.centroid.x, s.centroid.y]
     return lga_geojson_dict
 
 
-# TODO receive db as arg
 def upload_lga_geojson(db):
     lga_geojson_dict = get_lga_geojson()
     for feature in lga_geojson_dict['features']:
@@ -165,6 +167,7 @@ def upload_lga_geojson(db):
         curr_doc['columns'] = {}
         curr_doc['columns']['properties'] = {}
         curr_doc['columns']['properties']['lga_name'] = feature['properties']['lga_name']
+        curr_doc['columns']['properties']['centroid'] = feature['properties']['centroid']
         curr_doc['columns']['geometry'] = feature['geometry']
         db.save(curr_doc)
 
@@ -212,6 +215,8 @@ def read_lga_geojson_from_couchdb():
     return lga_geojson_dict
 
 
+# used by the harvester and analytics to know where to harvest data from and to
+# determine the location of the tweet.
 class LGA:
     def __init__(self):
         # key: lga code, value: lga name

@@ -7,7 +7,7 @@ function makeGraphs(error, scenario) {
 	if (data.type == 'bar') {
 		makeBarGraphs(scenario);
 	} else {
-		makeGraphs3(scenario);
+		makeGraphs5(scenario);
 	}
 }
 
@@ -201,7 +201,7 @@ function drawBarGraph(which_chart, c) {
 		lga_dim = lga_dim2;
 	};
 	chart
-		.width(1300)
+		.width(1250)
 		.height(300)
 		.x(d3.scale.ordinal())
 		.xUnits(dc.units.ordinal)
