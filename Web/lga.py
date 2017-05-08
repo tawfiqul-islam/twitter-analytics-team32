@@ -6,7 +6,6 @@ import re
 import sys
 from shapely.geometry import Point, shape
 from math import radians, cos, sin, asin, sqrt
-# import couchdb
 
 
 config = configparser.ConfigParser()
@@ -29,7 +28,6 @@ FILENAME_INTERNET_ACCESS = config['aurin_json_files']['internet_access']
 D_DOC_LGA = literal_eval(config['couchdb']['d_doc_lga'])
 
 
-# TODO read from couchdb
 def read_lga_file(keep_unincorporated=False):
     """ Preprocess lga name and combine coordinates of features with the same
     lga name """
@@ -83,7 +81,6 @@ def read_lga_file(keep_unincorporated=False):
     return lga_geojson_dict2, lga_list
 
 
-# TODO read from couchdb
 def read_internet_access(keep_unincorporated=False):
     with open(FILENAME_INTERNET_ACCESS) as f:
         internet_access = json.load(f)
@@ -152,7 +149,6 @@ def get_lga_geojson():
             # code does not exist
             lga_code = 0
         feature['properties']['lga_code'] = lga_code
-        # TODO add centroid
         s = shape(feature['geometry'])
         feature['properties']['centroid'] = [s.centroid.x, s.centroid.y]
     return lga_geojson_dict
@@ -207,9 +203,6 @@ def read_lga_geojson_from_couchdb():
         row['value']['type'] = 'Feature'
         lga_geojson_dict['features'].append(row['value'])
         feature_count += 1
-        # TODO delete
-        if feature_count > 20:
-            break
 
     lga_geojson_dict['totalFeatures'] = feature_count
     return lga_geojson_dict

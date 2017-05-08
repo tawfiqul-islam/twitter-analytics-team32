@@ -195,8 +195,8 @@ function drawBarGraph(which_chart, c) {
 	var chart = chart1;
 	var groups = groups1;
 	var lga_dim = lga_dim1;
-	if (which_chart == 2) { 
-		chart = chart2; 
+	if (which_chart == 2) {
+		chart = chart2;
 		groups = groups2;
 		lga_dim = lga_dim2;
 	};
@@ -219,9 +219,7 @@ function drawBarGraph(which_chart, c) {
 }
 
 function optionOnChange(n) {
-	console.log(n)
 	var selected = document.getElementById('opt-bar-graph-' + n).value;
-	console.log(selected)
 	drawBarGraph(n, selected);
 }
 

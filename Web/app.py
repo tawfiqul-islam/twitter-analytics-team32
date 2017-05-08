@@ -4,6 +4,7 @@ from flask import jsonify
 from flask import Response
 from lga import read_lga_geojson_from_couchdb
 from aurin_data import read_scenario_from_couchdb
+from tweet_data import read_tweet_scenario_from_couchdb
 import json
 import configparser
 from ast import literal_eval
@@ -11,6 +12,9 @@ from ast import literal_eval
 
 config = configparser.ConfigParser()
 config.read('../Web/config_web.ini')
+
+# rows from different AURIN data are joined based on this key
+COUCHDB_KEY = config['couchdb']['key']
 
 SCENARIOS = literal_eval(config['couchdb']['scenarios'])
 
@@ -65,11 +69,25 @@ def data_vic_lga():
 def data_scenario(n):
     n = int(n)
     if (is_valid_scenario(n)):
-        aurin_list = read_scenario_from_couchdb(n)
-        return jsonify(aurin_list)
+        aurin_dict = read_scenario_from_couchdb(n)
+        tweet_dict = read_tweet_scenario_from_couchdb(n)
+
+        # join the two data into 'aurin_dict'
+        # join 'rows'
+        for row in aurin_dict['rows']:
+            lga_code = row[COUCHDB_KEY]
+            if lga_code in tweet_dict['rows']:
+                for tweet_col in tweet_dict['rows'][lga_code]:
+                    row[tweet_col] = tweet_dict['rows'][lga_code][tweet_col]
+
+        # join 'column_infos'
+        for c in tweet_dict['column_infos']:
+            aurin_dict['column_infos'][c] = tweet_dict['column_infos'][c]
+
+        return jsonify(aurin_dict)
     return 'TODO handle error'
 
 
 if __name__ == '__main__':
     # TODO debug=False
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)

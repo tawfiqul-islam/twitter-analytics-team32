@@ -42,13 +42,21 @@ body.application {
 
 /* column selection at corner of the map */
 .column-selection {
-	padding: 0px 10px 10px 7; /* top right bottom left */
-	font-size: 1em;
+	padding: 0px 10px 10px 7px; /* top right bottom left */
+	/*font-size: 1em;*/
 	background: rgba(255,255,255,0.8);
 	box-shadow: 0 0 15px rgba(0,0,0,0.2); /* h-shadow v-shadow blur-distance color */
 	border-radius: 5px;
+	width: 240px;
+	max-width: 240px;
 }
 .column-selection input{ margin:3; } /* for radio button */
+
+.column-selection h4 {
+	margin: 5px 0px -8px; /* top (right,left) bottom */
+	color: #6C7A89;
+	font-size: 1.1em;
+}
 
 
 /* adapted from http://leafletjs.com/examples/choropleth/ */
@@ -66,6 +74,12 @@ body.application {
 	margin: 2px 8px 2px 0px;
 	float: left;
 	opacity: 0.7;
+}
+
+
+/* emoji popup on map */
+.emoji-popup {
+	font-size: 1em;
 }
 
 

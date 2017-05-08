@@ -21,7 +21,7 @@ def create_view(db, design_doc):
     try:
         db.save(design_doc)
     except couchdb.http.ResourceConflict:
-        print('Warning, the following design doc already exists in %s' % (db))
+        print('Warning, the following design doc is not created because a design doc with the same id already exists in %s' % (db))
         print(design_doc)
 
 
@@ -29,22 +29,20 @@ if __name__ == '__main__':
     couch = couchdb.Server(COUCHDB_URL)
     try:
         db = couch.create(COUCHDB_NAME_AURIN)
+        upload_all_aurin_data(db)
+        upload_lga_geojson(db)
+        create_view(db, D_DOC_SCENARIO)
+        create_view(db, D_DOC_LGA)
     except couchdb.PreconditionFailed:
         # database with that name exists
-        # delete that and create a fresh one
+
         # TODO delete
-        couch.delete(COUCHDB_NAME_AURIN)
-        db = couch.create(COUCHDB_NAME_AURIN)
-        # print('Error, database with name %s exists' % (COUCHDB_NAME))
+        # couch.delete(COUCHDB_NAME_AURIN)
+        # db = couch.create(COUCHDB_NAME_AURIN)
+
+        print('Error, data is not uploaded to database because  database with name %s exists' % (COUCHDB_NAME_AURIN))
         # sys.exit(1)
         # pass
-
-    upload_all_aurin_data(db)
-
-    upload_lga_geojson(db)
-
-    create_view(db, D_DOC_SCENARIO)
-    create_view(db, D_DOC_LGA)
 
     try:
         db = couch[COUCHDB_NAME_TWEETS]
@@ -52,9 +50,3 @@ if __name__ == '__main__':
         db = couch.create(COUCHDB_NAME_TWEETS)
 
     create_view(db, D_DOC_TWEETS)
-
-    # TODO delete
-    # for row in db.view('%s/_view/%s' % (VIEW_TWEETS_LABEL_COUNT['docid'], VIEW_TWEETS_LABEL_COUNT['view_name']),
-    # group=True,
-    # reduce=True):
-    # print row['key'], row['value']

@@ -2,32 +2,36 @@ var config = { lga_url : '/data/vic-lga',
 	scenario_url: '/data/scenario/' + data['which_scenario'],
 	melb_coordinates : [-37.8136, 144.9631],
 	vic_coordinates : [-37.4713, 144.7852],
-	// group_color: ['#fff7f3', '#fde0dd', '#fcc5c0', '#fa9fb5', '#f768a1', '#dd3497', '#ae017e', '#7a0177'],
 	group_color: ['#fde0dd', '#fa9fb5', '#c51b8a'],
-	null_color: '#737373',
+	null_color: '#969696',
 	decimal_places: 2,
 	number_str_size: 5,  // length of the string representation of a number
-	index_to_category: {0: 'Low', 1: 'Medium', 2: 'High'}
+	index_to_category: {0: 'Low', 1: 'Medium', 2: 'High'},
+	label_to_emoji_png: {
+		'happy': '../static/resources/data/emoji_happy.png',
+		'neutral': '../static/resources/data/emoji_neutral.png',
+		'unhappy': '../static/resources/data/emoji_unhappy.png',
+	}
 }
 
+
+function number_to_str(num) {
+	x = Math.pow(10, config.decimal_places);
+
+	// adapted from
+	// http://stackoverflow.com/questions/6134039/format-number-to-always-show-2-decimal-places
+	num = parseFloat(Math.round(num * x) / x).toFixed(config.decimal_places);
+
+	// copied from
+	// http://stackoverflow.com/questions/2998784/how-to-output-integers-with-leading-zeros-in-javascript
+	var s = num+"";
+	while (s.length < config.number_str_size) s = "0" + s;
+	return s;
+}
 
 // convert numerical values to categorical
 function toCategorical(rows, column_infos) {
 	result = [];
-
-	function number_to_str(num) {
-		x = Math.pow(10, config.decimal_places);
-		
-		// adapted from
-		// http://stackoverflow.com/questions/6134039/format-number-to-always-show-2-decimal-places
-		num = parseFloat(Math.round(num * x) / x).toFixed(config.decimal_places);
-		
-		// copied from
-		// http://stackoverflow.com/questions/2998784/how-to-output-integers-with-leading-zeros-in-javascript
-		var s = num+"";
-		while (s.length < config.number_str_size) s = "0" + s;
-		return s;
-	}
 
 	// create a string representation of each group
 	for (var c in column_infos) {
@@ -76,11 +80,11 @@ function preprocess(scenario, need_dim_group, to_categorical) {
 		}
 		return result
 	}
-	
+
 	var rows = scenario.rows;
 	if (to_categorical) { rows = toCategorical(scenario.rows, scenario.column_infos); }
 
-	var aurin_data = crossfilter(rows);
+	var data = crossfilter(rows);
 
 	// property: column name
 	// value: an object with properties: getter, title, detail, groups, groups_str (and optionally, dimension and group)
@@ -95,7 +99,7 @@ function preprocess(scenario, need_dim_group, to_categorical) {
 		}
 
 		// determine list of categories
-		var dimension = aurin_data.dimension(curr.getter);
+		var dimension = data.dimension(curr.getter);
 		var group = dimension.group();
 		if (need_dim_group) {
 			curr.dimension = dimension;
@@ -103,9 +107,8 @@ function preprocess(scenario, need_dim_group, to_categorical) {
 			// e.g. we want how many areas is in low, medium, high soft drink consumption
 			curr.group = group.reduceCount();
 		}
-		// TODO handle unhappy, neutral, happy
 
 		columns[col] = curr;
 	}
-	return {columns: columns, data: aurin_data};
+	return {columns: columns, data: data};
 }

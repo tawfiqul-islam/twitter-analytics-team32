@@ -23,7 +23,7 @@ AURIN_COLUMNS = dict(config['aurin_columns'])
 for key in AURIN_COLUMNS:
     AURIN_COLUMNS[key] = literal_eval(AURIN_COLUMNS[key])
 
-DECIMAL_PLACES = int(config['aurin_preprocessing']['decimal_places'])
+DECIMAL_PLACES = int(config['preprocessing']['decimal_places'])
 ACCURATE_TO = 10 ** -DECIMAL_PLACES
 
 D_DOC_SCENARIO = literal_eval(config['couchdb']['d_doc_scenario'])
@@ -40,37 +40,37 @@ def get_key(metadata_filename):
     return metadata_json_dict['key']
 
 
-def generate_groups(list_of_ints, n):
+def generate_groups(list_of_values, n):
     """Tries to divide the integers into n groups with same size. However fails
     when size of list is not divisible by n and/or there are duplicates in the
     list
     """
     groups = []
 
-    list_of_ints.sort()
+    list_of_values.sort()
 
     curr_index = 0
-    lower_boundary = list_of_ints[0]
-    size = len(list_of_ints) / n
+    lower_boundary = list_of_values[0]
+    size = len(list_of_values) / n
     for i in range(n):
         start_index = curr_index
         if i == n-1:
             # last group
-            last_index = len(list_of_ints) - 1
+            last_index = len(list_of_values) - 1
         else:
             last_index = start_index+size-1
-        upper_boundary = list_of_ints[last_index]
+        upper_boundary = list_of_values[last_index]
 
         if (lower_boundary > upper_boundary):
             print('Error when trying to calculate groups.')
-            print('List: %s' % str(list_of_ints))
+            print('List: %s' % str(list_of_values))
             print('n: %d' % n)
             print('Boundaries so far: %s' % groups)
             sys.exit(1)
 
         groups.append((lower_boundary, upper_boundary))
 
-        curr_index = bisect_right(list_of_ints, upper_boundary)
+        curr_index = bisect_right(list_of_values, upper_boundary)
         lower_boundary = upper_boundary + ACCURATE_TO
     return groups
 

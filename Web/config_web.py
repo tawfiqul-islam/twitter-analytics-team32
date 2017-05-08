@@ -53,7 +53,7 @@ MAP_COLUMNS_INFO = \
     }
     '''
 
-MAP_TWEETS = \
+MAP_TWEETS_LABEL = \
     '''function (doc) {
         if (doc.lga_code && doc.label != 5) {
             emit(doc.lga_code, doc.label);
@@ -61,7 +61,7 @@ MAP_TWEETS = \
     }
     '''
 
-REDUCE_TWEETS = \
+REDUCE_TWEETS_LABEL = \
     '''function (keys, values, rereduce) {
         var result = {'unhappy': 0, 'neutral': 0, 'happy': 0};
         if (rereduce) {
@@ -93,6 +93,14 @@ MAP_TWEETS_TAG_FOOD = \
     }
     '''
 
+MAP_TWEETS_COUNT = \
+    '''function (doc) {
+        if (doc.lga_code) {
+            emit(doc.lga_code, 1);
+        }
+    }
+    '''
+
 
 def main():
     if (len(sys.argv) != 2):
@@ -106,9 +114,7 @@ def main():
     config['couchdb'] = {'port': '5984',
                          'ip_address': ip_address,
                          'db_name_aurin': 'aurin',
-                         # TODO
                          'db_name_tweets': 'target_data',
-                         # 'db_name_tweets': 'train_data_test',
                          'key': 'lga_code',  # an emitted key from a map function should at least have this value
                          'exclude_lga_code': [29399],  # this is the code for unincorporated areas
                          'd_doc_lga': {'_id': '_design/lga',
@@ -121,13 +127,15 @@ def main():
                                                       }
                                             },
                          'd_doc_tweets': {'_id': '_design/tweets',
-                                          'views': {'tweets-label-count': {'map': MAP_TWEETS,
-                                                                           'reduce': REDUCE_TWEETS},
+                                          'views': {'tweets-label-count': {'map': MAP_TWEETS_LABEL,
+                                                                           'reduce': REDUCE_TWEETS_LABEL},
                                                     'tweets-tag-food': {'map': MAP_TWEETS_TAG_FOOD,
-                                                                        'reduce': '_count'}  # share the same reduce function
+                                                                        'reduce': '_count'},
+                                                    'tweets-count': {'map': MAP_TWEETS_COUNT,  # to get the total number of tweets harvested from each area
+                                                                     'reduce': '_count'}
                                                     }
                                           },
-                         'scenarios': [2, 3]
+                         'scenarios': [1, 2]
                          }
 
     config['geojson_file'] = {'lga': DATA_PATH + 'vic-lga.json',
@@ -138,15 +146,15 @@ def main():
 
     config['aurin_columns'] = {'internet_access': {'columns': [['internet_tt_3_percent_6_11_6_11', 'Internet Access', 'Percentage of Private Dwellings with Internet Connections']],
                                                    'actions': [['group', 3]],
-                                                   'scenarios': [[3]]},
+                                                   'scenarios': [[2]]},
                                # the value in key 'columns' is an array of size three that shows the property name in json file, a short detail, and a longer detail
                                'profiles_data': {'columns': [['ppl_aged_over_18_who_are_current_smokers_perc', 'Smokers', 'Percentage of people aged over 18 who are current smokers'],
                                                              ['ppl_reporting_being_obese_perc', 'Obesity', 'Percentage of people reported being obese'],
                                                              ['ppl_who_are_members_of_a_sports_grp_perc', 'Sports Group', 'Percentage of members of a sports group'],
                                                              ['ppl_drink_sugar_sweetened_soft_drink_every_day_perc', 'Soft Drink', 'Percentage of people who drink sugar-sweetened soft drink every day'],
-                                                             ['ppl_who_speak_a_lang_other_english_at_home_perc', 'Non-English Speakers', 'Percentage of People who speak a language other than English at home'],
+                                                             ['ppl_who_speak_a_lang_other_english_at_home_perc', 'Non-English Speakers', 'Percentage of people who speak a language other than English at home'],
                                                              ['ppl_who_rated_their_cmty_as_a_pleasant_env_perc', 'Pleasant Environment', 'Percentage of people who rated their community as a pleasant environment'],
-                                                             ['ppl_who_are_members_of_a_religious_grp_perc', 'Religous Group', 'Percentage of people people who are members of a religious group']
+                                                             ['ppl_who_are_members_of_a_religious_grp_perc', 'Religous Group', 'Percentage of people who are members of a religious group']
                                                              ],
                                                  # preprocessing action
                                                  'actions': [['group', 3],
@@ -159,18 +167,31 @@ def main():
                                                              ],
                                                  # which scenarios the column
                                                  # belong to
-                                                 'scenarios': [[3],
-                                                               [3],
-                                                               [3],
-                                                               [3],
+                                                 'scenarios': [[2],
                                                                [2],
                                                                [2],
                                                                [2],
+                                                               [1],
+                                                               [1],
+                                                               [1]
                                                                ]
                                                  }
                                }
 
-    config['aurin_preprocessing'] = {'decimal_places': 2}  # the accuracy of the values that will be shown in the web
+    config['preprocessing'] = {'decimal_places': 2}  # the accuracy of the values that will be shown in the web
+
+    # same format as 'aurin_columns', but without scenario
+    config['tweet_columns'] = {'sentiment': {'columns': [['happy', 'Happy', 'Percentage of tweets classified as happy'],
+                                                         ['neutral', 'Neutral', 'Percentage of tweets classified as neutral'],
+                                                         ['unhappy', 'Unhappy', 'Percentage of tweets classified as unhappy']],
+                                             'actions': [['group', 3],
+                                                         ['group', 3],
+                                                         ['group', 3]]
+                                             },
+                               'fast_food': {'columns': [['fast_food', 'Fast Food Tweets', 'Percentage of tweets classified as related to fast food']],
+                                             'actions': [['group', 3]]
+                                             }
+                               }
 
     with open('config_web.ini', 'w') as configfile:
         config.write(configfile)

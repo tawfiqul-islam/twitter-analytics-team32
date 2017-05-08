@@ -24,6 +24,10 @@ function makeMap1(lga, scenario) {
 	// needed to get a column value by LGA code
 	var lga_code_dimension = data.dimension(function (d) { return d.lga_code; });
 
+	// create corssfilter from the numeric data as well to show the percentage of happy, neutral and unhappy
+	var data_numeric = crossfilter(scenario.rows);
+	var lga_code_dimension_numeric = data_numeric.dimension(function (d) { return d.lga_code; });
+
 
 	// i is the index of the color
 	function getColor(i) {
@@ -45,8 +49,8 @@ function makeMap1(lga, scenario) {
 			fillColor: fillColor(feature.properties.lga_code),
 			weight: 1,
 			opacity: 1,
-			color: 'white',
-			dashArray: '3',
+			color: '#34495e',
+			//dashArray: '3',
 			fillOpacity: 0.7
 		};
 	}
@@ -58,7 +62,7 @@ function makeMap1(lga, scenario) {
 		var layer = e.target;
 
 		layer.setStyle({
-			weight: 4,
+			weight: 5,
 			color: '#2C3E50',
 			dashArray: '',
 			fillOpacity: 0.7
@@ -89,11 +93,12 @@ function makeMap1(lga, scenario) {
 	}
 
 
-	var my_map = L.map('mapid').setView(config.melb_coordinates, 8);
+	var my_map = L.map('mapid').setView(config.vic_coordinates, 8);
 
 	// from https://leaflet-extras.github.io/leaflet-providers/preview/
 	L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-		maxZoom: 19,
+		maxZoom: 11,
+		minZoom: 6,
 		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 	}).addTo(my_map);
 
@@ -137,13 +142,13 @@ function makeMap1(lga, scenario) {
 
 
 	// column selection
-	var column_selection = L.control({position: 'bottomleft'});
+	var column_selection = L.control({position: 'bottomright'});
 
 	// called on control.addTo(map)
 	column_selection.onAdd = function (map) {
 		var div = L.DomUtil.create('div', 'column-selection'); // create a div
 
-		div.innerHTML = '<form name="cf">';
+		div.innerHTML = '<form name="cf"><h4> Select Column</h4>';
 		for (var c in columns) {
 			div.innerHTML += '<input type="radio" name="column_selection_radio" id="' + c + '" value="' + c + '" />' + columns[c].title + '<br>';
 		}
@@ -164,6 +169,9 @@ function makeMap1(lga, scenario) {
 	for(var i = 0, max = radios.length; i < max; i++) {
 		radios[i].onclick = columnSelectionHandler;
 	}
+
+	// set which radio button is checked at the beginning
+	document.getElementById(default_c).checked = true
 
 
 	// legend
@@ -190,16 +198,61 @@ function makeMap1(lga, scenario) {
 
 
 	// emoji
-	var emoji = L.icon({
-		iconUrl: '../static/resources/data/emoji_happy.png',
-
-		iconSize:     [16, 16], // size of the icon
-		iconAnchor:   [8, 8], // point of the icon which will correspond to marker's location
-		popupAnchor:  [0, 0] // point from which the popup should open relative to the iconAnchor
+	// adapted from http://leafletjs.com/examples/custom-icons/example.html
+	var EmojiIcon = L.Icon.extend({
+		options: {
+			iconSize:     [24, 24], // size of the icon
+			iconAnchor:   [12, 12], // point of the icon which will correspond to marker's location
+			popupAnchor:  [0, 0] // point from which the popup should open relative to the iconAnchor
+		}
 	});
-	L.marker(config.melb_coordinates, {icon: emoji}).addTo(my_map);
-	
 
-	// set which radio button is checked at the beginning
-	document.getElementById(default_c).checked = true
+	// create an icon for each label
+	label_to_icon = {}
+	for (var l in config.label_to_emoji_png) {
+		label_to_icon[l] = new EmojiIcon({iconUrl: config.label_to_emoji_png[l]});
+	}
+
+	// returns the majority of label in a particular area
+	// tie is broken based on which label is first in the loop
+	function getMajority(row) {
+		var max_value = 0.0;
+		var max_label = null;
+		for (var label in label_to_icon) {
+			if (row[label] && row[label] > max_value) {
+				max_value = row[label];
+				max_label = label;
+			}
+		}
+		return max_label;
+	}
+
+	if (data.which_scenario == 1) {
+		// put emojis on map :)
+		for (var f=0; f<lga.features.length; f++) {
+			var lga_code = lga.features[f].properties.lga_code;
+			if (!lga_code) {
+				// skip unincorporated areas
+				continue;
+			}
+			var row = lga_code_dimension_numeric.filter(lga_code).top(1)[0];
+			var label = getMajority(row);
+
+			if (label) {
+				// construct popup message string
+				var popup_msg = '<table class="emoji-popup">';
+				for (var l in label_to_icon) {
+					popup_msg += '<tr>';
+					popup_msg += '<td>' + l + ': </td>';
+					popup_msg += '<td>&nbsp;&nbsp;</td>'; // space between columns
+					popup_msg += '<td>' + number_to_str(row[l]) + '%</td>';
+					popup_msg += '</tr>'
+				}
+				popup_msg += '</table>';
+
+				var centroid = lga.features[f].properties.centroid;
+				L.marker([centroid[1], centroid[0]], {icon: label_to_icon[label]}).bindPopup(popup_msg).addTo(my_map);
+			}
+		}
+	}
 }
