@@ -67,19 +67,24 @@ if __name__ == '__main__':
 
     if my_rank == 'vm2':
         #STREAMER
-        twitter_stream = Stream(auth, MyListener(db=db,args=args,userdb=userdb,locationdb=locationdb))
-        api = tweepy.API(auth)
-        twitter_stream.api = api
+        while(True):
+            try:
+                twitter_stream = Stream(auth, MyListener(db=db,args=args,userdb=userdb,locationdb=locationdb))
+                api = tweepy.API(auth)
+                twitter_stream.api = api
 
-        #This is the bounding box within which we want tweets
-        boundingbox = config['Stream']['Location']
-        boundingbox = boundingbox.split(',')
-        loc1 = float(boundingbox[0])
-        loc2 = float(boundingbox[1])
-        loc3 = float(boundingbox[2])
-        loc4 = float(boundingbox[3])
-        #Set up the stream
-        twitter_stream.filter(locations=[loc1,loc2,loc3,loc4])
+                #This is the bounding box within which we want tweets
+                boundingbox = config['Stream']['Location']
+                boundingbox = boundingbox.split(',')
+                loc1 = float(boundingbox[0])
+                loc2 = float(boundingbox[1])
+                loc3 = float(boundingbox[2])
+                loc4 = float(boundingbox[3])
+                #Set up the stream
+                twitter_stream.filter(locations=[loc1,loc2,loc3,loc4])
+            except:
+                time.sleep(15)
+                pass
 
     elif my_rank == 'vm3':
         #LOCATION SEARCHER
