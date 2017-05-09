@@ -1,5 +1,5 @@
 var config = { lga_url : '/data/vic-lga',
-	scenario_url: '/data/scenario/' + data['which_scenario'],
+	scenario_url: '/data/scenario/' + arg['which_scenario'],
 	melb_coordinates : [-37.8136, 144.9631],
 	vic_coordinates : [-37.4713, 144.7852],
 	group_color: ['#fde0dd', '#fa9fb5', '#c51b8a'],
@@ -51,7 +51,7 @@ function toCategorical(rows, column_infos) {
 				continue;
 			}
 
-			var curr_value = rows[i][c].toFixed(config.decimal_places);
+			var curr_value = rows[i][c];
 			var groups = column_infos[c]['groups']
 			var curr_group = undefined;
 			for (var j=0; j<groups.length; j++) {
@@ -60,7 +60,9 @@ function toCategorical(rows, column_infos) {
 					break;
 				}
 			}
-			if (!curr_group) console.log('Error, A ' + c + ' value of ' + curr_value + ' does not belong to any of the groups ' + groups);
+			if (!curr_group) {
+				console.log('Error, A ' + c + ' value of ' + curr_value + ' does not belong to any of the groups ' + groups);
+			}
 			curr_row[c] = curr_group;
 		}
 		result.push(curr_row);

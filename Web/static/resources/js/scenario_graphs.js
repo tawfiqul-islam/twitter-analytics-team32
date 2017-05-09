@@ -4,10 +4,10 @@ d3.queue()
 	.await(makeGraphs);
 
 function makeGraphs(error, scenario) {
-	if (data.type == 'bar') {
+	if (arg.type == 'bar') {
 		makeBarGraphs(scenario);
-	} else {
-		makeGraphs5(scenario);
+	} else if (arg.type == 'scatter') {
+		makeScatterPlot(scenario);
 	}
 }
 
@@ -38,123 +38,111 @@ function makeGraphs1(scenario) {
 }
 
 
-// scatter matrix
-function makeGraphs5(scenario) {
-	var data = crossfilter(scenario.rows);
+// adapted from
+// https://github.com/dc-js/dc.js/wiki/FAQ#remove-empty-bins
+function remove_empty_bins(source_group) {
+    return {
+        all:function () {
+            return source_group.all().filter(function(d) {
+                // dont want undefined as x or y values
+				return (d.key[0] != undefined && d.key[1] != undefined);
+            });
+        }
+    };
+}
 
-	// adapted from
+function drawScatterPlot() {
+	// uses helper function similar to
 	// https://github.com/dc-js/dc.js/blob/master/web/examples/splom.html
-
-	var fields = Object.keys(scenario.column_infos);
-	var rows = ['heading'].concat(fields.slice(0).reverse()),
-		cols = ['heading'].concat(fields);
-
 	function make_dimension(var1, var2) {
-		return data.dimension(function(d) {
-			return [d[var1], d[var2], d.lga_name]; // TODO no need to return third element
+		return scatter_data.dimension(function(d) {
+			return [d[var1], d[var2], d.lga_name]; // want area name to show on hover
 		});
 	}
-
 	function key_part(i) {
 		return function(kv) {
 			return kv.key[i];
 		};
 	}
 
-	var charts = [];
-	d3.select('#table-content')
-		.selectAll('tr').data(rows)
-		.enter().append('tr').attr('class', function(d) {
-			return d === 'heading' ? 'heading row' : 'row';
-		})
-		.each(function(row, y) {
-			d3.select(this).selectAll('td').data(cols)
-				.enter().append('td').attr('class', function(d) {
-					return d === 'heading' ? 'heading entry' : 'entry';
-				})
-				.each(function(col, x) {
-					var cdiv = d3.select(this).append('div')
-					if(row === 'heading') {
-						if(col !== 'heading') // dont want to put text on top left corner
-							cdiv.text(scenario.column_infos[col].detail)
-						return; // dont want to add chart here
-					}
-					else if(col === 'heading') {
-						cdiv.text(scenario.column_infos[row].detail)
-						return; // dont want to add chart here
-					}
-					cdiv.attr('class', 'chart-holder');
-					var chart = dc.scatterPlot(cdiv);
-					var dim = make_dimension(col,row),
-						group = dim.group();
+	function generateTitle(d) {
+		// on mouse hover, display the third element in the key
+		return d.key[2];
+	}
 
-					// only want to show axis at left and bottom sub graphs
-					var showYAxis = x === 1, showXAxis = y === Object.keys(scenario.column_infos).length;
+	var dim = make_dimension(x_axis, y_axis);
+	var group = dim.group();
 
-					chart
-						.transitionDuration(0)
-						.width(200 + (showYAxis?25:0))
-						.height(200 + (showXAxis?20:0))
-						.margins({
-							left: showYAxis ? 25 : 8,
-							top: 5,
-							right: 0,
-							bottom: showXAxis ? 20 : 5
-						})
-						.dimension(dim).group(group)
-						.keyAccessor(key_part(0))
-						.valueAccessor(key_part(1))
+	scatter_plot
+		.width(1000)
+		.height(500)
+		.x(d3.scale.linear())
+		.brushOn(false)
+		.symbolSize(8)
+		.clipPadding(10)
+		.elasticX(true)
+		.elasticY(true)
+		.xAxisLabel(scatter_column_infos[x_axis].detail)
+		.yAxisLabel(scatter_column_infos[y_axis].detail)
+		.dimension(dim)
+		.group(remove_empty_bins(group))
+		.keyAccessor(key_part(0))
+		.valueAccessor(key_part(1))
+		.title(generateTitle)
+		.renderTitle(true);
 
-					//-------------------------------------
-						//.colorAccessor(key_part(2))
-						//.colorDomain(['setosa', 'versicolor', 'virginica'])
-					//-------------------------------------
+	scatter_plot.render();
+}
 
-						.x(d3.scale.linear()).xAxisPadding("0.001%")
-						.y(d3.scale.linear()).yAxisPadding("0.001%")
-						.brushOn(true)
-						.elasticX(true)
-						.elasticY(true)
-						.symbolSize(7)
-						.nonemptyOpacity(0.7)
-						.emptySize(7)
-						.emptyColor('#ccc')
-						.emptyOpacity(0.7)
-						.excludedSize(7)
-						.excludedColor('#ccc')
-						.excludedOpacity(0.7)
-						.renderHorizontalGridLines(true)
-						.renderVerticalGridLines(true);
-					chart.xAxis().ticks(6);
-					chart.yAxis().ticks(6);
-					chart.on('postRender', function(chart) {
-						// remove axes unless at left or bottom
-						if(!showXAxis)
-							chart.select('.x.axis').attr('display', 'none');
-						if(!showYAxis)
-							chart.select('.y.axis').attr('display', 'none');
-						// remove clip path, allow dots to display outside
-						chart.select('.chart-body').attr('clip-path', null);
-					});
-					// only filter on one chart at a time
-					chart.on('filtered', function(_, filter) {
-						if(!filter)
-							return;
-						charts.forEach(function(c) {
-							if(c !== chart)
-								c.filter(null);
-						});
-					});
-					charts.push(chart);
-				});
-		});
-	dc.renderAll();
+function optionOnChangeScatter(y) {
+	// if 'y' is 0, x axis is changed
+	// if 'y' is 1, y axis is changed
+	if (y == 0) {
+		x_axis = document.getElementById('opt-scatter-' + y).value;
+		drawScatterPlot();
+	} else if (y == 1) {
+		y_axis = document.getElementById('opt-scatter-' + y).value;
+		drawScatterPlot();
+	}
+}
+
+function makeScatterPlot(scenario) {
+	scatter_plot = dc.scatterPlot("#scatter_graph"); // global
+
+	scatter_data = crossfilter(scenario.rows); // global
+
+	scatter_column_infos = scenario.column_infos; // global
+
+	// global so that it can be accessed by 'generateTitle'
+	dim = scatter_data.dimension(function(d) { return [d.internet_tt_3_percent_6_11_6_11, d.ppl_drink_sugar_sweetened_soft_drink_every_day_perc, d.lga_name]; });
+	var group = dim.group();
+
+	// global variables
+	x_axis = Object.keys(scenario.column_infos)[0];
+	y_axis = Object.keys(scenario.column_infos)[1];
+
+	writeOptions(document.getElementById('opt-scatter-0'), scenario.column_infos, Object.keys(scenario.column_infos)[0]);
+	writeOptions(document.getElementById('opt-scatter-1'), scenario.column_infos, Object.keys(scenario.column_infos)[1]);
+
+	optionOnChangeScatter(0);
+	optionOnChangeScatter(1);
 }
 
 
+// write the options
+function writeOptions(select, columns, selected) {
+	for (var c in columns) {
+		if (c == selected) {
+			select.innerHTML += '<option value="' + c + '" selected="selected">' + columns[c].detail
+		} else {
+			select.innerHTML += '<option value="' + c + '">' + columns[c].detail
+		}
+	}
+}
+
 function makeBarGraphs(scenario) {
 	var p = preprocess(scenario); // get getter of each column
-	columns = p.columns; // global
+	var columns = p.columns;
 	var data = p.data;
 
 	lga_dim1 = data.dimension(function(d) { return d.lga_name; }); // global
@@ -171,22 +159,9 @@ function makeBarGraphs(scenario) {
 	chart1 = dc.barChart('#bar-graph-1'); // global
 	chart2 = dc.barChart('#bar-graph-2'); // global
 
-	// write the options
-	function writeOptions(select, selected) {
-		for (var c in columns) {
-			if (c == selected) {
-				select.innerHTML += '<option value="' + c + '" selected="selected">' + columns[c].detail
-			} else {
-				select.innerHTML += '<option value="' + c + '">' + columns[c].detail
-			}
-		}
-	}
+	writeOptions(document.getElementById('opt-bar-graph-1'), columns, Object.keys(columns)[0]);
+	writeOptions(document.getElementById('opt-bar-graph-2'), columns, Object.keys(columns)[1]);
 
-	writeOptions(document.getElementById('opt-bar-graph-1'), Object.keys(columns)[0]);
-	writeOptions(document.getElementById('opt-bar-graph-2'), Object.keys(columns)[1]);
-
-	//drawBarGraph(1, Object.keys(columns)[0]);
-	//drawBarGraph(2, Object.keys(columns)[1]);
 	optionOnChange(1);
 	optionOnChange(2);
 }

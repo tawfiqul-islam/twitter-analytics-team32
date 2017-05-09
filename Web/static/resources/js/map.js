@@ -4,8 +4,11 @@ d3.queue()
 	.await(makeMap);
 
 function makeMap(error, lga, scenario) {
-	console.log(error);
-	makeMap1(lga, scenario);
+	if (error == null) {
+		makeMap1(lga, scenario);
+	} else {
+		// TODO error handling
+	}
 }
 
 var categories = ['Low', 'Medium', 'High'];
@@ -15,7 +18,7 @@ function makeMap1(lga, scenario) {
 
 	var p = preprocess(scenario, false, true); // see preprocess.js
 	columns = p.columns;
-	data = p.data
+	var data = p.data
 
 	var default_c = Object.keys(columns)[0];  // use on first call to legend.update(default_c) and radio button with this id is checked by default
 	var curr_groups_str = columns[default_c].groups_str;
@@ -24,8 +27,8 @@ function makeMap1(lga, scenario) {
 	// needed to get a column value by LGA code
 	var lga_code_dimension = data.dimension(function (d) { return d.lga_code; });
 
-	// create corssfilter from the numeric data as well to show the percentage of happy, neutral and unhappy
-	var data_numeric = crossfilter(scenario.rows);
+	// create crossfilter from the numeric data as well to show the percentage of happy, neutral and unhappy
+	data_numeric = crossfilter(scenario.rows);
 	var lga_code_dimension_numeric = data_numeric.dimension(function (d) { return d.lga_code; });
 
 
@@ -141,6 +144,15 @@ function makeMap1(lga, scenario) {
 	info.addTo(my_map);
 
 
+	// differentiate tweet data and aurin data
+	var tweet_data = []
+	if (arg.which_scenario == 1) {
+		tweet_data = Object.keys(config.label_to_emoji_png);
+	} else if (arg.which_scenario == 2) {
+		tweet_data = ['fast_food']
+	}
+
+
 	// column selection
 	var column_selection = L.control({position: 'bottomright'});
 
@@ -148,8 +160,19 @@ function makeMap1(lga, scenario) {
 	column_selection.onAdd = function (map) {
 		var div = L.DomUtil.create('div', 'column-selection'); // create a div
 
-		div.innerHTML = '<form name="cf"><h4> Select Column</h4>';
+		div.innerHTML = '<form name="cf"><h4> Tweet Sentiment </h4>';
+		
+		// want to print tweet options first
+		for (var i=0; i<tweet_data.length; i++) {
+			div.innerHTML += '<input type="radio" name="column_selection_radio" id="' + tweet_data[i] + '" value="' + tweet_data[i] + '" />' + columns[tweet_data[i]].title + '<br>';
+		}
+		div.innerHTML += '<hr><h5>Aurin</h5>'
+
 		for (var c in columns) {
+			if (tweet_data.indexOf(c) > -1) {
+				// dont want to print tweet options twice
+				continue;
+			}
 			div.innerHTML += '<input type="radio" name="column_selection_radio" id="' + c + '" value="' + c + '" />' + columns[c].title + '<br>';
 		}
 		div.innerHTML += '</form>';
@@ -160,6 +183,8 @@ function makeMap1(lga, scenario) {
 	function columnSelectionHandler() {
 		curr_getter = columns[this.value].getter;
 		curr_groups_str = columns[this.value].groups_str;
+
+		updateDescription(this.value); // update text located below the graph
 
 		geojson.setStyle(style); // change overlay layer
 		legend.update(this.value); // change legend
@@ -213,21 +238,7 @@ function makeMap1(lga, scenario) {
 		label_to_icon[l] = new EmojiIcon({iconUrl: config.label_to_emoji_png[l]});
 	}
 
-	// returns the majority of label in a particular area
-	// tie is broken based on which label is first in the loop
-	function getMajority(row) {
-		var max_value = 0.0;
-		var max_label = null;
-		for (var label in label_to_icon) {
-			if (row[label] && row[label] > max_value) {
-				max_value = row[label];
-				max_label = label;
-			}
-		}
-		return max_label;
-	}
-
-	if (data.which_scenario == 1) {
+	if (arg.which_scenario == 1) {
 		// put emojis on map :)
 		for (var f=0; f<lga.features.length; f++) {
 			var lga_code = lga.features[f].properties.lga_code;
@@ -236,6 +247,7 @@ function makeMap1(lga, scenario) {
 				continue;
 			}
 			var row = lga_code_dimension_numeric.filter(lga_code).top(1)[0];
+			lga_code_dimension_numeric.filterAll(); // clear filter
 			var label = getMajority(row);
 
 			if (label) {
@@ -255,4 +267,34 @@ function makeMap1(lga, scenario) {
 			}
 		}
 	}
+}
+
+// returns the majority of label in a particular area
+// tie is broken based on which label is first in the loop
+function getMajority(row) {
+	var max_value = 0.0;
+	var max_label = null;
+	for (var label in label_to_icon) {
+		if (row[label] && row[label] > max_value) {
+			max_value = row[label];
+			max_label = label;
+		}
+	}
+	return max_label;
+}
+
+function updateDescription(curr_col) {
+	//d.top(3)
+	var div = document.getElementById('description');
+
+	var dim = data_numeric.dimension(columns[curr_col].getter)
+	
+	var top_10 = dim.top(10);
+	var num_happy = 0;
+	for (var i=0; i<top_10.length; i++) {
+		if (getMajority(top_10[i]) == 'happy') {
+			num_happy += 1;
+		}
+	}
+	div.innerHTML = 'Accuracy of twitter analysis wrt to  Aurin data: ' +  (num_happy/10)*100 + '%'
 }

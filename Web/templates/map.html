@@ -11,37 +11,33 @@
 		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
 		<link rel="stylesheet" href="../static/resources/css/my.css" />
 		<script type="text/javascript">
-			var data = {{data|tojson}}
+			var arg = {{arg|tojson}}
 		</script>
+		<script src="../static/lib/js/jquery.min.js"></script>
 
 
 	</head>
 
 	<body class="application">
 
-		<div class="navbar navbar-inverse navbar-custom" id="my-navbar" role="navigation">
+		<div id="my-navbar">
+			<script>
+				$("#my-navbar").load("../static/resources/html/navbar.html");
+			</script>
 		</div>
-
 
 		<div class="container-fluid">
 			<div class="row">
 				<div class="col-sm-12">
 					<div class="chart-wrapper">
-						<div class="chart-title">
-							TITLE TODO
-						</div>
+						<div class="chart-title"></div>
 						<div class="chart-stage" id="mapid"></div>
-						<div class="chart-notes">
-							DESCRIPTION TODO
-						</div>
+						<div class="chart-notes" id="description"></div>
 					</div>
 
 				</div>
 
 			</div>
-
-
-
 
 
 			<hr>
@@ -55,9 +51,7 @@
 		<script src="../static/lib/js/d3-queue.min.js"></script>
 		<script src="../static/resources/js/preprocess.js"> type="text/javascript"></script>
 		<script src="../static/resources/js/map.js"> type="text/javascript"></script>
-		<script src="../static/resources/js/navbar.js"> type="text/javascript"></script>
 
-		<script src="../static/lib/js/jquery.min.js"></script>
 		<script src="../static/lib/js/bootstrap.min.js"></script>
 		<script src="../static/lib/js/holder.js"></script>
 		<script>

@@ -14,7 +14,6 @@ config.read('../Web/config_web.ini')
 COUCHDB_URL = config['couchdb']['ip_address'] + ':' + config['couchdb']['port']
 COUCHDB_NAME = config['couchdb']['db_name_aurin']
 
-# TODO change 'lga_code' to COUCHDB_KEY
 # rows from different AURIN data are joined based on this key
 COUCHDB_KEY = config['couchdb']['key']
 
@@ -121,8 +120,8 @@ def merge_lga_code_and_polygons(lga_name_to_code_dict, lga_geojson_dict):
         else:
             # code does not exist
             lga_code = 0
-        lga_dict[lga_name]['lga_code'] = lga_code
-        feature['properties']['lga_code'] = lga_code
+        lga_dict[lga_name][COUCHDB_KEY] = lga_code
+        feature['properties'][COUCHDB_KEY] = lga_code
         lga_dict[lga_name]['shape'] = shape(feature['geometry'])
     return lga_dict
 
@@ -148,7 +147,7 @@ def get_lga_geojson():
         else:
             # code does not exist
             lga_code = 0
-        feature['properties']['lga_code'] = lga_code
+        feature['properties'][COUCHDB_KEY] = lga_code
         s = shape(feature['geometry'])
         feature['properties']['centroid'] = [s.centroid.x, s.centroid.y]
     return lga_geojson_dict

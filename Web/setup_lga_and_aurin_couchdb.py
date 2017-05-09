@@ -41,8 +41,6 @@ if __name__ == '__main__':
         # db = couch.create(COUCHDB_NAME_AURIN)
 
         print('Error, data is not uploaded to database because  database with name %s exists' % (COUCHDB_NAME_AURIN))
-        # sys.exit(1)
-        # pass
 
     try:
         db = couch[COUCHDB_NAME_TWEETS]

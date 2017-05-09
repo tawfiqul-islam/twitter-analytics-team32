@@ -4,7 +4,7 @@ body.application {
 }
 
 #mapid {
-	height: 70vh;
+	height: 75vh;
 }
 
 
@@ -57,6 +57,11 @@ body.application {
 	color: #6C7A89;
 	font-size: 1.1em;
 }
+.column-selection h5 {
+	margin: 5px 0px 3px; /* top (right,left) bottom */
+	color: #6C7A89;
+	font-size: 1.1em;
+}
 
 
 /* adapted from http://leafletjs.com/examples/choropleth/ */
@@ -90,13 +95,17 @@ body.application {
 }
 
 
-/* legend for bar chart */
-.bar-graph-container {
+/* graph */
+.bar-graph-container,
+.scatter-graph-container {
 	overflow: auto;
 	position: relative;
 }
 .bar-graph {
 	width: 1250px;
+}
+.scatter-graph {
+	width: 1000px;
 }
 
 
@@ -146,3 +155,20 @@ body.application .navbar-custom {
 	background-color: #3E606F; /* med grey */
 	color: #FCFFF5;
 }
+
+
+/* center the 'not found' text */
+.not-found-container {
+	height: 75vh;
+}
+.not-found {
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
+}
+.not-found h1{
+	font-size: 5em;
+    text-align: center;
+	vertical-align: middle;
+}
+

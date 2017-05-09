@@ -103,18 +103,22 @@ MAP_TWEETS_COUNT = \
 
 
 def main():
-    if (len(sys.argv) != 2):
-        print("Please provide couchdb's ip address without port number, e.g. http://127.0.0.1")
+    if (len(sys.argv) != 3):
+        print("Please provide couchdb's ip address and port number separated by space, e.g. 'http://127.0.0.1 5984'")
         sys.exit(1)
 
     ip_address = sys.argv[1]
 
+    port = sys.argv[2]
+
     config = configparser.ConfigParser()
 
-    config['couchdb'] = {'port': '5984',
+    config['couchdb'] = {'port': port,
                          'ip_address': ip_address,
                          'db_name_aurin': 'aurin',
+                         # TODO
                          'db_name_tweets': 'target_data',
+                         # 'db_name_tweets': 'temp_target_data',
                          'key': 'lga_code',  # an emitted key from a map function should at least have this value
                          'exclude_lga_code': [29399],  # this is the code for unincorporated areas
                          'd_doc_lga': {'_id': '_design/lga',

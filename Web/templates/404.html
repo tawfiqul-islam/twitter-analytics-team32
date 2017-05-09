@@ -1,0 +1,59 @@
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+
+		<title>COMP90024 Team 32</title>
+
+		<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+		<link rel="stylesheet" type="text/css" href="../static/lib/css/bootstrap.min.css" />
+		<link rel="stylesheet" type="text/css" href="../static/lib/css/keen-dashboards.css" />
+
+		<link rel="stylesheet" href="../static/resources/css/my.css" />
+		<script src="../static/lib/js/jquery.min.js"></script>
+
+
+	</head>
+
+	<body class="application">
+
+		<div id="my-navbar">
+			<script>
+				$("#my-navbar").load("../static/resources/html/navbar.html");
+			</script>
+		</div>
+
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-12">
+					<div class="chart-wrapper">
+						<div class="chart-stage">
+							<div class ="not-found-container">
+								<div class="not-found">
+									<h1 id="msg"></h1>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+
+			<hr>
+			<p class="small text-muted">Built with &#9829; by <a href="https://keen.io">Keen IO</a></p>
+		</div>
+
+
+		<script type="text/javascript">
+			var arg = {{arg|tojson}};
+			document.getElementById("msg").innerHTML = arg.msg;
+		</script>
+
+
+		<script src="../static/lib/js/bootstrap.min.js"></script>
+		<script src="../static/lib/js/holder.js"></script>
+		<script>
+			Holder.add_theme("white", { background:"#fff", foreground:"#a7a7a7", size:10 });
+		</script>
+		<script src="../static/lib/js/keen.min.js"></script>
+	</body>
+</html>

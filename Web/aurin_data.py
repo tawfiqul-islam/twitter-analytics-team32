@@ -125,7 +125,7 @@ def generate_docs(json_dict, doc_type, key, columns, actions, scenarios):
         for i in range(len(columns)):
             curr_col_name = columns[i][0]
             curr_doc['columns'][curr_col_name] = {}
-            curr_doc['columns'][curr_col_name]['value'] = curr_property[curr_col_name]
+            curr_doc['columns'][curr_col_name]['value'] = round(curr_property[curr_col_name], DECIMAL_PLACES)
             curr_doc['columns'][curr_col_name]['scenarios'] = scenarios[i]
         docs.append(curr_doc)
 

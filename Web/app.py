@@ -28,31 +28,31 @@ def is_valid_scenario(n):
     return False
 
 
-@app.route('/scenario_map/<n>')
-def index(n):
+@app.route('/map/<n>')
+def map(n):
     n = int(n)
     if (is_valid_scenario(n)):
-        data = {'which_scenario': n}
-        return render_template('scenario_map.html', data=data)
-    return 'TODO handle error'
+        arg = {'which_scenario': n}
+        return render_template('map.html', arg=arg)
+    return page_not_found("Invalid Scenario Number")
 
 
-@app.route('/scenario_graphs/<n>')
-def scenario_graphs(n):
+@app.route('/scatter_plot/<n>')
+def scatter_plot(n):
     n = int(n)
     if (is_valid_scenario(n)):
-        data = {'which_scenario': n}
-        return render_template('scenario_graphs.html', data=data)
-    return 'TODO handle error'
+        arg = {'which_scenario': n, 'type': 'scatter'}
+        return render_template('scatter_plot.html', arg=arg)
+    return page_not_found("Invalid Scenario Number")
 
 
-@app.route('/scenario_graphs_bar/<n>')
-def scenario_graphs_bar(n):
+@app.route('/bar_graph/<n>')
+def bar_graph(n):
     n = int(n)
     if (is_valid_scenario(n)):
-        data = {'which_scenario': n, 'type': 'bar'}
-        return render_template('scenario_graphs_bar.html', data=data)
-    return 'TODO handle error'
+        arg = {'which_scenario': n, 'type': 'bar'}
+        return render_template('bar_graph.html', arg=arg)
+    return page_not_found("Invalid Scenario Number")
 
 
 @app.route('/data/vic-lga')
@@ -85,7 +85,15 @@ def data_scenario(n):
             aurin_dict['column_infos'][c] = tweet_dict['column_infos'][c]
 
         return jsonify(aurin_dict)
-    return 'TODO handle error'
+    return page_not_found("Invalid Scenario Number")
+
+
+# copied from
+# http://flask.pocoo.org/docs/0.10/patterns/errorpages/#custom-error-pages
+@app.errorhandler(404)
+def page_not_found(e):
+    arg = {'msg': str(e)}
+    return render_template('404.html', arg=arg), 404
 
 
 if __name__ == '__main__':
