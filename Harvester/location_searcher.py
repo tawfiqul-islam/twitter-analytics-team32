@@ -300,6 +300,9 @@ for k,v in mydict.items():
         time.sleep(1000)
         location_list = api.reverse_geocode(long=str(v['centre_coord'][0]), 
             lat=str(v['centre_coord'][1]), accuracy=v['radius']/1000)
+    except tweepy.error.TweepError:
+        continue
+        pass
 
 
     print(len(location_list))

@@ -35,11 +35,9 @@ if __name__ == '__main__':
 
     auth = OAuthHandler(config['Harvest']['ConsumerKey'], config['Harvest']['ConsumerSecret'])
     auth.set_access_token(config['Harvest']['AccessToken'], config['Harvest']['AccesTokenSecret'])
-    couch = couchdb.Server( config['Harvest']['DatabaseIP'])
     databasename = config['Stream']['DatabaseName']
     userdatabase = databasename + 'user'
     locationdatabase = databasename + 'location'
-
 
     #find rank based on IP
     my_ip = [(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
@@ -49,10 +47,17 @@ if __name__ == '__main__':
             my_rank = vmnum
 
     #open up dbs
-    if databasename not in couch:
-        db = couch.create(databasename)
-    else:
-        db = couch[databasename]
+    dbs = []
+    for i in range(1,len(config['VMTag'])+1):
+        vm = 'vm' + str(i)
+        #note the port and ip format is assumed
+        couch = couchdb.Server('http://' + config['VMTag'][vm] + ':5986/')
+        tempname = databasename + str(i)
+        if tempname not in couch:
+            tempdb = couch.create(tempname)
+        else:
+            tempdb = couch[tempname]
+        dbs.append(tempdb)
 
     if userdatabase not in couch:
         userdb = couch.create(userdatabase)
@@ -69,7 +74,7 @@ if __name__ == '__main__':
         #STREAMER
         while(True):
             try:
-                twitter_stream = Stream(auth, MyListener(db=db,args=args,userdb=userdb,locationdb=locationdb))
+                twitter_stream = Stream(auth, MyListener(dbs=dbs,args=args,userdb=userdb,locationdb=locationdb))
                 api = tweepy.API(auth)
                 twitter_stream.api = api
 
@@ -95,10 +100,8 @@ if __name__ == '__main__':
             locationdb = couch[locationdatabase]
             maxtweets = int(config['LocationSearch']['MaxTweets'])
 
-            crawler = LocationCrawler(locationdb,db,args)
-
             for locationID in locationdb:
-                crawler = LocationCrawler(locationdb,db,args,maxtweets,userdb,locationID)
+                crawler = LocationCrawler(locationdb,dbs,args,maxtweets,userdb,locationID)
                 crawler.add_tweets()
             time.sleep(1800)
 
@@ -112,9 +115,7 @@ if __name__ == '__main__':
             userdb = couch[userdatabase]
             maxtweets = int(config['UserSearch']['MaxTweets'])
 
-            crawler = UserCrawler(userdb,db,args)
-
             for userID in userdb:
-                crawler = UserCrawler(userdb,db,args,maxtweets,locationdb,userID)
+                crawler = UserCrawler(userdb,dbs,args,maxtweets,locationdb,userID)
                 crawler.add_tweets()
             time.sleep(1800)
