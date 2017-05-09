@@ -53,13 +53,13 @@ if __name__ == '__main__':
         vmIP = config['VMTag'][vmname]
         couch = couchdb.Server('http://' + vmIP + ':5986/')
         tempname = databasename + vmname[2:]
-        print(tempname)
         if tempname not in couch:
             tempdb = couch.create(tempname)
         else:
             tempdb = couch[tempname]
         dbs.append(tempdb)
 
+    couch = couchdb.Server(config['Harvest']['DatabaseIP'])
     if userdatabase not in couch:
         userdb = couch.create(userdatabase)
     else:
@@ -88,7 +88,8 @@ if __name__ == '__main__':
                 loc4 = float(boundingbox[3])
                 #Set up the stream
                 twitter_stream.filter(locations=[loc1,loc2,loc3,loc4])
-            except:
+            except Exception as e:
+                print(e)
                 time.sleep(15)
                 pass
 

@@ -38,7 +38,7 @@ class MyListener(StreamListener):
     def on_data(self, data):
         try:
             self.count %= len(self.dbs)
-            db = dbs[count]
+            db = self.dbs[self.count]
             tweet = json.loads(data)
             #Ensure a tweet we are interested in then store in relevant DBs
             if tweet['text']:
