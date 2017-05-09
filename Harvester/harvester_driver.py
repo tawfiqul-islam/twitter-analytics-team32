@@ -48,11 +48,12 @@ if __name__ == '__main__':
 
     #open up dbs
     dbs = []
-    for i in range(1,len(config['VMTag'])+1):
-        vm = 'vm' + str(i)
-        #note the port and ip format is assumed
-        couch = couchdb.Server('http://' + config['VMTag'][vm] + ':5986/')
-        tempname = databasename + str(i)
+    for vmname in config['VMTag']:
+        #note the port and ip format is assumed TODO: change to 5984 when ready
+        vmIP = config['VMTag'][vmname]
+        couch = couchdb.Server('http://' + vmIP + ':5986/')
+        tempname = databasename + vmname[2:]
+        print(tempname)
         if tempname not in couch:
             tempdb = couch.create(tempname)
         else:

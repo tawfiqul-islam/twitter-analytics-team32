@@ -10,20 +10,20 @@ config['Harvest'] = { 'ConsumerKey' : 'b4bivK0epgUoLUEWIisHyWmZL',
 #Note the order of the coords, bounding box from bottom left then top right
 #Longtitude then latitude pairs, comma seperated,
 config['Stream'] = { 'Location' : '140.888036,-39.05559,150.525361,-34.196400',
-                     'DatabaseName' : 'harvester'}
+                     'DatabaseName' : 'harvest'}
 
 #The name of the database upon which to crawl and search for more tweets
 #By convention, suggested format is dbcrawl = dbstore+user
 #Convention is NECESSARY if intended use in conjunction with whole package
-config['UserSearch'] = { 'DatabaseCrawl' : 'harvesteruser',
-                         'DatabaseStore' : 'harvester',
+config['UserSearch'] = { 'DatabaseCrawl' : 'harvestuser',
+                         'DatabaseStore' : 'harvest',
                          'MaxTweets' : 50000}
 
 #The name of the database upon which to crawl and search for more tweets
 #By convention, suggested format is dbcrawl = dbstore+location
 #Convention is NECESSARY if intended use in conjunction with whole package
-config['LocationSearch'] = { 'DatabaseCrawl' : 'harvesterlocation',
-                             'DatabaseStore' : 'harvester',
+config['LocationSearch'] = { 'DatabaseCrawl' : 'harvestlocation',
+                             'DatabaseStore' : 'harvest',
                              'MaxTweets' : 50000}
 
 #IP to identiy which VM we are, VM1 = db
