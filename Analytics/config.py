@@ -3,8 +3,9 @@ import configparser
 def config_parser():
 	config = configparser.ConfigParser()
 
-	config['Analytics'] = { 'couch_database' : 'http://115.146.92.169:5984/',
-		'couch_database_target' : 'http://115.146.92.169:5984/',
+	config['Analytics'] = { 'couch_database' : 'http://115.146.92.169:5986/',
+		'couch_database_target' : 'http://115.146.92.169:5986/',
+		'couch_ip_train' : 'http://115.146.92.169:5986/',
 		'train_data' : 'train_data',
 		'dict_dir' : './Dict',
 		'row_data' : 'victoriastream',
@@ -19,6 +20,8 @@ def config_parser():
 		'tfid_con_vec' : 'tfid_counter_model.pkl',
 		'classifier' : 'lr_nectar.pkl',
 		'classifier_tfid' : 'tfid_lr_nectar.pkl',
+		'classifier_mnb' : 'mnb_nectar.pkl',
+		'classifier_neural' : 'neural_nectar.pkl',
 		'obj_features' : 'features',
 		'obj_id' : '_id',
 		'obj_is_read' : 'is_read',	# is_read determine if features is generated
@@ -40,6 +43,16 @@ def config_parser():
 		'host_file' : 'hosts',
 		'temp_' : 'temp_'
 		} # has_processed determine if preprocess has been done
+
+	#IP to identiy which VM we are, VM1 = db
+	config['VMTag'] = {'VM1' : 'http://115.146.92.169:5986/',
+	                   'VM2' : 'http://115.146.93.16:5986/',
+	                   'VM3' : 'http://115.146.92.181:5986/',
+	                   'VM4' : 'http://115.146.93.25:5986/',
+	                   'VM1_DB' : 'harvest1',
+	                   'VM2_DB' : 'harvest2',
+	                   'VM3_DB' : 'harvest3',
+	                   'VM4_DB' : 'harvest4'}
 
 	# Writing our configuration file to 'example.cfg'
 	with open('config.ini', 'w' )as configfile:

@@ -35,6 +35,14 @@ def main(argv):
 	config.read(argv[1])
 
 	COUCH_IP = config['Analytics']['couch_database']
+	VM1_IP = config['VMTag']['VM1']
+	VM2_IP = config['VMTag']['VM2']
+	VM3_IP = config['VMTag']['VM3']
+	VM4_IP = config['VMTag']['VM4']
+	DB_1 = config['VMTag']['VM1_DB']
+	DB_2 = config['VMTag']['VM2_DB']
+	DB_3 = config['VMTag']['VM3_DB']
+	DB_4 = config['VMTag']['VM4_DB']
 	COUCH_IP_TARGET = config['Analytics']['couch_database_target']
 	COUCH_DB_TRAIN_DATA = config['Analytics']['train_data']
 	COUCH_DB_ROW_DATA = config['Analytics']['row_data']
@@ -59,16 +67,22 @@ def main(argv):
 	LR_FILE = config['Analytics']['classifier']
 	COUNTER_FILE = config['Analytics']['con_vec']
 	READBYTE = 'rb'
-	FINISH_READING = 'finished reading'
-
+	FINISH_READING = 'Finish all reading and loading\nWe start to process doc from DB'
+	DB_INFO = 'Source Database: '
+	DB_INFO2 = 'Target Database: '
+	IP_INFO = 'IP: '
 	# get machine ip
 	my_ip = [(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
 	
-	db_row = check_which_db(ip1, ip2, ip3, ip4, db1, db2, db3, db4, my_ip)
+	couch, db_row = check_which_db(VM1_IP, VM2_IP, VM3_IP, VM4_IP, DB_1, DB_2, DB_3, DB_4, my_ip)
 
 	# get target db
 	couch_target = couchdb.Server(COUCH_IP_TARGET)
 	db_target = couch_target[COUCH_DB_TARGET_DATA]
+
+	print(IP_INFO + str(my_ip))
+	print(DB_INFO + str(db_row))
+	print(DB_INFO2 + str(db_target))
 
 
 	# load dictionaries
@@ -96,74 +110,30 @@ def main(argv):
 	stop = load_stopwords()
 
 	print(FINISH_READING)
-	count = 0
 
+	# process each document in the db
 	for _id in db_row:
 		tweet = db_row.get(_id)
+
 		if HAS_PROCESSED not in tweet:
 			gen_set.gen_negation_set(
-		                   emojis,
-		                   WORDS,
-		                   tweet,
-		                   db_row,
-		                   db_target,
-		                   config,
-		                   couch,
-		                   count_all,
-		                   punctuation,
-		                   stop,
-		                   couchdb,
-		                   lga,
-		                   negation_list,
-		                   food_dict,
-		                   load_vec,
-		                   lr)
-	# 	tweet['has_processed'] = True
-	# 	db_row.save(tweet)
-	# db_list = ['harvest1','harvest2', 'harvest3', 'harvest4']
-	# if rank == 0:
-	# 	for db in db_list:
-	# 		db_row = couch[db]
-	# 		print("it is db_row =======")
-	# 		print(db_row)
-	# 		print('====================')
-	# 		workerid=1
-	# 		for _id in db_row:
-	# 			tweet = db_row.get(_id)
-	# 			#workerid +=1
-	# 			if workerid % 15 == 0:
-	# 				workerid =1
-	# 			#print("scattering")
-	# 			list_tweets = comm.send(tweet, dest=workerid, tag=11)
-	# 			tweet['has_processed'] = True
-	# 			db_row.save(tweet)
-	# 			workerid +=1
-	# 			count += 1
-	# 			if count % 100 == 0:
-	# 				print(count)
-	# 				print(db_row)
+	                   emojis,
+	                   WORDS,
+	                   tweet,
+	                   db_row,
+	                   db_target,
+	                   config,
+	                   couch,
+	                   count_all,
+	                   punctuation,
+	                   stop,
+	                   couchdb,
+	                   lga,
+	                   negation_list,
+	                   food_dict,
+	                   load_vec,
+	                   lr)
 
-	# else:
-	# 	while True:
-	# 	#	recvtweet= "blah"
-	# 		#print("worker-- > " + str (rank))
-	# 		recvtweet = comm.recv(source=0 , tag=11)
-	# 		gen_set.gen_negation_set(
-	#                    emojis,
-	#                    WORDS,
-	#                    recvtweet,
-	#                    db_target,
-	#                    config,
-	#                    couch,
-	#                    count_all,
-	#                    punctuation,
-	#                    stop,
-	#                    couchdb,
-	#                    lga,
-	#                    negation_list,
-	#                    food_dict,
-	#                    load_vec,
-	#                    lr)
 
 
 if __name__ == '__main__':

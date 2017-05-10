@@ -1,5 +1,9 @@
+'''
+
+'''
+
 import couchdb
-from mpi4py import MPI
+
 import create_sentiment
 import preprocess
 from load_dict import load_stopwords, load_emoji, load_minging_dict, load_afinn, load_negation_list, load_food_dict
@@ -30,9 +34,7 @@ from check_ip import check_which_db
 
 
 def main(argv):
-	comm = MPI.COMM_WORLD
-	rank = comm.Get_rank()
-	size = comm.Get_size()
+
 
 	# declare config parser
 	config = configparser.ConfigParser()
@@ -40,6 +42,15 @@ def main(argv):
 
 	# get value from config parser
 	COUCH_IP = config['Analytics']['couch_database']
+	COUCH_IP_TRAIN = config['Analytics']['couch_ip_train']
+	VM1_IP = config['VMTag']['VM1']
+	VM2_IP = config['VMTag']['VM2']
+	VM3_IP = config['VMTag']['VM3']
+	VM4_IP = config['VMTag']['VM4']
+	DB_1 = config['VMTag']['VM1_DB']
+	DB_2 = config['VMTag']['VM2_DB']
+	DB_3 = config['VMTag']['VM3_DB']
+	DB_4 = config['VMTag']['VM4_DB']
 	COUCH_IP_TARGET = config['Analytics']['couch_database_target']
 	COUCH_DB_TRAIN_DATA = config['Analytics']['train_data']
 	COUCH_DB_ROW_DATA = config['Analytics']['row_data']
@@ -60,19 +71,27 @@ def main(argv):
 	HAS_PROCESSED = config['Analytics']['obj_has_processed']
 	COUCH_DB_TARGET = config['Analytics']['target_data']
 	TWEET_TEXT = config['Analytics']['obj_text']
+	FINISH_READING = 'Finish all reading and loading\nWe start to process doc from DB'
+	DB_INFO = 'Source Database: '
+	DB_INFO2 = 'Target Database: '
+	IP_INFO = 'IP: '
 
 	# get machine ip
 	my_ip = [(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
 	
-	db_row = check_which_db(ip1, ip2, ip3, ip4, db1, db2, db3, db4, my_ip)
+	couch, db_row = check_which_db(VM1_IP, VM2_IP, VM3_IP, VM4_IP, DB_1, DB_2, DB_3, DB_4, my_ip)
 
+	# db_list = get_all_db(VM1_IP, VM2_IP, VM3_IP, VM4_IP, DB_1, DB_2, DB_3, DB_4)
+
+	
 	# get target db
-	couch_target = couchdb.Server(COUCH_IP_TARGET)
-	db_target = couch_target[COUCH_DB_TARGET_DATA]
-	couch = couchdb.Server(COUCH_IP)
-	couch_target = couchdb.Server(COUCH_IP_TARGET)
+	couch_target = couchdb.Server(COUCH_IP_TRAIN)
+	db_target = couch_target[COUCH_DB_TRAIN_DATA]
 
 
+	print(IP_INFO + str(my_ip))
+	print(DB_INFO + str(db_row))
+	print(DB_INFO2 + str(db_target))
 
 	# load dictionary
 	food_dict = load_food_dict(DICT_DIR, FOOD_FILE)
@@ -89,28 +108,29 @@ def main(argv):
 	punctuation = list(string.punctuation)
 	stop = load_stopwords()
 
-	print('finish reading')
+	print(FINISH_READING)
 	count = 0
 
 	for _id in db_row:
 		tweet = db_row.get(_id)
-		gen_set.gen_negation_train_set(pos_set, 
-                    neg_set,
-                    afinn_dict,
-                    emojis,
-                    WORDS,
-                    recvtweet,
-                    db_row,
-                    db_target,
-                    config,
-                    couch,
-                    count_all,
-                    punctuation,
-                    stop,
-                    couchdb,
-                    lga,
-                    negation_list,
-                    food_dict)
+		if HAS_PROCESSED not in tweet:
+			gen_set.gen_negation_train_set(pos_set, 
+						                    neg_set,
+						                    afinn_dict,
+						                    emojis,
+						                    WORDS,
+						                    tweet,
+						                    db_row,
+						                    db_target,
+						                    config,
+						                    couch,
+						                    count_all,
+						                    punctuation,
+						                    stop,
+						                    couchdb,
+						                    lga,
+						                    negation_list,
+						                    food_dict)
 
 
 if __name__ == '__main__':
