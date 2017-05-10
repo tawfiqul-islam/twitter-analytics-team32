@@ -1,18 +1,24 @@
-####################################################
-#                                                  #
-# Source from http://norvig.com/spell-correct.html #
-# Made by Peter norvig                             #
-#                                                  #
-####################################################
+'''
+    We use the below code from the                                      
+        source  http://norvig.com/spell-correct.html 
+        which is made by Peter norvig                             
+'''
 
 import re
 from collections import Counter
 import os
 
+'''
+    Below function are used to check probability that the mislabel word should be corrected as which word in word dictionary
+'''
+
+DICT = './Dict'
+WORD_FILE = "words_new.txt"
+
 def words(text): return re.findall(r'\w+', text.lower())
 
 # WORDS = Counter(words(open('words_new.txt').read()))
-WORDS = Counter(words(os.path.join('./Dict', "words_new.txt")))
+WORDS = Counter(words(os.path.join(DICT, WORD_FILE)))
 
 def P(word, N=sum(WORDS.values())): 
     "Probability of `word`."

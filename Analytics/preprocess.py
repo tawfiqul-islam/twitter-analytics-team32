@@ -56,7 +56,7 @@ def remove_duplicate(tweet):
     return removed_tweet
 
 # use this to process tweets
-def process_tokens(tweet, stop, punctuation, emojis, WORDS):
+def process_tokens(tweet, stop, punctuation, emojis, WORDS, neg_list):
     terms_all = [term for term in preprocess(tweet)]
     pos_string = '[:;=＝]+\s*-*\s*[oO]*[dD)pP\]]'
     neg_string = r'[:;=＝]+\s*-*\s*[oO]*[(/\\]*'
@@ -69,6 +69,7 @@ def process_tokens(tweet, stop, punctuation, emojis, WORDS):
                         or word.startswith('#') 
                         or word.startswith('@')
                         or word in emojis
+                        or word in neg_list
                         or pos_regex.findall(word)
                         or neg_regex.findall(word)
                         else spell_checker.correction(word) for word in filter_words]
@@ -110,3 +111,18 @@ def format_couchdata(features):
         train_features[i] = list(map(int, train_features[i]))
     train_features = numpy.asarray(train_features)
     return train_features
+
+
+def find_negation(target, text):
+    result = []
+    m = re.search(r'((?:\w+\W+){,1})('+ target + ')\W+((?:\w*\W*){,1})', text)
+    if m:
+        l = [ x.strip().split() for x in m.groups()]
+    
+        if l:
+            for item in l[0]:
+                result.append(item)
+            for item in l[2]:
+                result.append(item)
+
+    return result

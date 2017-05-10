@@ -59,4 +59,33 @@ def load_emoji(dict_dir, file_name):
     file.close()
     return emojis
 
+def load_stopwords():
+    stops = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 
+    'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 
+    'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 
+    'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 
+    'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 
+    'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 
+    'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 
+    'for', 'with', 'about', 'between', 'into', 'through', 'during', 'before', 'after', 
+    'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 
+    'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 
+    'why', 'how', 'all', 'any', 'both', 'each', 'so', 'than']
+
+    return stops
+
+def load_negation_list():
+    negation_list = ['not', 'never', 'no', 'n\'t', 'nope', 'non', 'nor', 'while', 'but', 'however', 'wherea']
+    return negation_list
+
+def load_food_dict(dict_dir, file_name):
+    food_dict = []
+    with open(os.path.join(dict_dir, file_name)) as file:
+        for line in file:
+            line = line.rstrip()
+            line = line.lower()
+            food_dict.append(line)
+    return food_dict
+    
+
 

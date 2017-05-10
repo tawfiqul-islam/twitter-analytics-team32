@@ -1,4 +1,4 @@
-from couchdb.mapping import Document, TextField, IntegerField, DateTimeField, BooleanField
+from couchdb.mapping import Document, TextField, IntegerField, DictField, DateTimeField, BooleanField
 
 class TweetData(Document):
 	_id = TextField()
@@ -11,3 +11,8 @@ class TweetData(Document):
 	geo_code = TextField()
 	is_read = BooleanField()
 	has_processed = BooleanField()
+	coordinates = TextField()
+	columns = DictField()
+	lga_code = IntegerField()
+	tag_food = BooleanField()
+	tag_politic = BooleanField()
