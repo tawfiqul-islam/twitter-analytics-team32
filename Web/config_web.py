@@ -44,7 +44,7 @@ MAP_COLUMNS_INFO = \
             for (var f in doc.columns_info) {
                 for (var c in doc.columns_info[f]) {
                     for (var i=0; i<doc.columns_info[f][c]['scenarios'].length; i++) {
-                        var s = doc.columns_info[f][c]['scenarios'][0]
+                        var s = doc.columns_info[f][c]['scenarios'][i]
                         emit([s, c], doc.columns_info[f][c]);
                     }
                 }
@@ -146,22 +146,32 @@ def main():
                               'doc_type': 'lga_geojson_feature'}
 
     config['aurin_json_files'] = {'internet_access': DATA_PATH + 'LGA11_Internet_Access_at_Home.json',
+                                  'alcohol': DATA_PATH + 'LGA_Purchased_alcohol_in_the_last_7_days.json',
                                   'profiles_data': DATA_PATH + 'Local_Government_Area__LGA__profiles_data_2015_for_VIC.json'}
 
+    # the value in key 'columns' is an array of size three that shows the property name in json file, a short detail, and a longer detail
     config['aurin_columns'] = {'internet_access': {'columns': [['internet_tt_3_percent_6_11_6_11', 'Internet Access', 'Percentage of Private Dwellings with Internet Connections']],
                                                    'actions': [['group', 3]],
-                                                   'scenarios': [[2]]},
-                               # the value in key 'columns' is an array of size three that shows the property name in json file, a short detail, and a longer detail
-                               'profiles_data': {'columns': [['ppl_aged_over_18_who_are_current_smokers_perc', 'Smokers', 'Percentage of people aged over 18 who are current smokers'],
-                                                             ['ppl_reporting_being_obese_perc', 'Obesity', 'Percentage of people reported being obese'],
-                                                             ['ppl_who_are_members_of_a_sports_grp_perc', 'Sports Group', 'Percentage of members of a sports group'],
-                                                             ['ppl_drink_sugar_sweetened_soft_drink_every_day_perc', 'Soft Drink', 'Percentage of people who drink sugar-sweetened soft drink every day'],
+                                                   'scenarios': [[1, 2]]},
+                               'alcohol': {'columns': [['numeric', 'Alcohol', 'Percentage of people who bought alcohol this week']],
+                                           'actions': [['group', 3]],
+                                           'scenarios': [[1]]},
+                               'profiles_data': {'columns': [['ppl_who_are_members_of_a_sports_grp_perc', 'Sports Group', 'Percentage of members of a sports group'],
                                                              ['ppl_who_speak_a_lang_other_english_at_home_perc', 'Non-English Speakers', 'Percentage of people who speak a language other than English at home'],
                                                              ['ppl_who_rated_their_cmty_as_a_pleasant_env_perc', 'Pleasant Environment', 'Percentage of people who rated their community as a pleasant environment'],
-                                                             ['ppl_who_are_members_of_a_religious_grp_perc', 'Religous Group', 'Percentage of people who are members of a religious group']
+                                                             ['ppl_who_are_members_of_a_religious_grp_perc', 'Religous Group', 'Percentage of people who are members of a religious group'],
+                                                             ['total_offences_per_1000_pop', 'Crime', 'Number of offences per 1,000 population'],
+                                                             ['distance_to_melbourne_km', 'Distance to Melb', 'Distance to Melbourne (km)'],
+                                                             ['median_household_income_aud', 'Income', 'Median household income'],
+                                                             ['ppl_not_meet_diet_glines_either_fruit_or_veg_consump_perc', 'Diet', 'Percentage of People who do not meet dietary guidelines for fruit or vegetable consumption'],
+                                                             ['ppl_reporting_being_obese_perc', 'Obesity', 'Percentage of people reported being obese'],
+                                                             ['ppl_reporting_fair_or_poor_hlth_status_perc', 'Poor Health', 'Percentage of people reporting fair or poor health status']
                                                              ],
                                                  # preprocessing action
                                                  'actions': [['group', 3],
+                                                             ['group', 3],
+                                                             ['group', 3],
+                                                             ['group', 3],
                                                              ['group', 3],
                                                              ['group', 3],
                                                              ['group', 3],
@@ -171,13 +181,16 @@ def main():
                                                              ],
                                                  # which scenarios the column
                                                  # belong to
-                                                 'scenarios': [[2],
-                                                               [2],
-                                                               [2],
-                                                               [2],
+                                                 'scenarios': [[1, 2],
+                                                               [1],
+                                                               [1, 2],
                                                                [1],
                                                                [1],
-                                                               [1]
+                                                               [1],
+                                                               [1],
+                                                               [2],
+                                                               [2],
+                                                               [2],
                                                                ]
                                                  }
                                }
@@ -187,14 +200,19 @@ def main():
     # same format as 'aurin_columns', but without scenario
     config['tweet_columns'] = {'sentiment': {'columns': [['happy', 'Happy', 'Percentage of tweets classified as happy'],
                                                          ['neutral', 'Neutral', 'Percentage of tweets classified as neutral'],
-                                                         ['unhappy', 'Unhappy', 'Percentage of tweets classified as unhappy']],
+                                                         ['unhappy', 'Unhappy', 'Percentage of tweets classified as unhappy'],
+                                                         ['average_sentiment', 'Average Sentiment', 'Sum of sentiment divided by total tweets in that area']],
                                              'actions': [['group', 3],
+                                                         ['group', 3],
                                                          ['group', 3],
                                                          ['group', 3]]
                                              },
                                'fast_food': {'columns': [['fast_food', 'Fast Food Tweets', 'Percentage of tweets classified as related to fast food']],
                                              'actions': [['group', 3]]
-                                             }
+                                             },
+                               'tweet_count': {'columns': [['tweet_count', 'Tweet Count', 'Total number of tweet harvested for a particular area']],
+                                               'actions': [['group', 3]]
+                                               }
                                }
 
     with open('config_web.ini', 'w') as configfile:

@@ -61,8 +61,28 @@ def read_sentiment_from_couchdb(db):
             result['rows'][row['key']][label] = round(row['value'][label] / total * 100.0,
                                                       DECIMAL_PLACES)
 
+        # get average sentiment (happy = +1, unhappy = -1, neutral = 0)
+        average_sentiment = (row['value']['happy'] - row['value']['unhappy']) / total
+        result['rows'][row['key']]['average_sentiment'] = round(average_sentiment,
+                                                                DECIMAL_PLACES)
+
     # 'column_infos' contains title, detail and groups
     result['column_infos'] = construct_column_infos('sentiment', result['rows'])
+    return result
+
+
+def read_count_from_couchdb(db):
+    result = {'rows': {}}
+
+    for row in db.view('%s/_view/%s' % (D_DOC_TWEETS['_id'], 'tweets-count'),
+                       group=True,
+                       reduce=True):
+        lga_code = row['key']
+        result['rows'][lga_code] = {}
+        # row has only one column
+        col_name = TWEET_COLUMNS['tweet_count']['columns'][0][0]
+        result['rows'][lga_code][col_name] = row['value']
+    result['column_infos'] = construct_column_infos('tweet_count', result['rows'])
     return result
 
 
@@ -109,4 +129,6 @@ def read_tweet_scenario_from_couchdb(n):
         return read_sentiment_from_couchdb(db)
     elif n == 2:
         return read_fast_food_from_couchdb(db)
+    elif n == 3:
+        return read_count_from_couchdb(db)
     return None

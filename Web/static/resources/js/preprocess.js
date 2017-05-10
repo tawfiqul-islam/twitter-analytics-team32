@@ -11,11 +11,12 @@ var config = { lga_url : '/data/vic-lga',
 		'happy': '../static/resources/data/emoji_happy.png',
 		'neutral': '../static/resources/data/emoji_neutral.png',
 		'unhappy': '../static/resources/data/emoji_unhappy.png',
-	}
+	},
+	icon_png: ['../static/resources/data/apple.png', '../static/resources/data/fries.png', '../static/resources/data/burger.png']
 }
 
 
-function number_to_str(num) {
+function numberToStr(num) {
 	x = Math.pow(10, config.decimal_places);
 
 	// adapted from
@@ -29,6 +30,10 @@ function number_to_str(num) {
 	return s;
 }
 
+function roundNum(num) {
+	return +num.toFixed(config.decimal_places);
+}
+
 // convert numerical values to categorical
 function toCategorical(rows, column_infos) {
 	result = [];
@@ -38,7 +43,15 @@ function toCategorical(rows, column_infos) {
 		groups_str = [];
 		groups = column_infos[c]['groups'];
 		for (var i=0; i<groups.length; i++) {
-			groups_str.push(number_to_str(groups[i][0]) + '-' + number_to_str(groups[i][1]));
+			// convert to str
+			groups_str.push(numberToStr(groups[i][0]) + '-' + numberToStr(groups[i][1]));
+
+			// round to the correct decimal places so that we can group properly
+			// otherwise, we might get an error
+			// for example, we can't classify 0.29 
+			// with groups: [0.1,0.28], [0.29000000000000004,0.44], [0.45,3.23]
+			groups[i][0] = roundNum(groups[i][0]);
+			groups[i][1] = roundNum(groups[i][1]);
 		}
 		column_infos[c]['groups_str'] = groups_str;
 	}
@@ -51,7 +64,7 @@ function toCategorical(rows, column_infos) {
 				continue;
 			}
 
-			var curr_value = rows[i][c];
+			var curr_value = roundNum(rows[i][c]);
 			var groups = column_infos[c]['groups']
 			var curr_group = undefined;
 			for (var j=0; j<groups.length; j++) {

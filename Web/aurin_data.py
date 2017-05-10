@@ -83,7 +83,7 @@ def generate_docs(json_dict, doc_type, key, columns, actions, scenarios):
     docs = []
 
     # generate groups for each column that needs to be grouped
-    assert (len(columns) == len(actions) == len(scenarios)), 'Length of columns, actions and scenarios should be the same in file %d' % doc_type
+    assert (len(columns) == len(actions) == len(scenarios)), 'Length of columns, actions and scenarios should be the same in file %s' % doc_type
     columns_info = {'doc_type': 'columns_info', 'columns_info': {doc_type: {}}}
     for i in range(len(columns)):
         curr_column_name = columns[i][0]

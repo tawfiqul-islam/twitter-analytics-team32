@@ -28,6 +28,11 @@ def is_valid_scenario(n):
     return False
 
 
+@app.route('/')
+def index():
+    return render_template('home.html')
+
+
 @app.route('/map/<n>')
 def map(n):
     n = int(n)
@@ -98,4 +103,4 @@ def page_not_found(e):
 
 if __name__ == '__main__':
     # TODO debug=False
-    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
+    app.run(host='0.0.0.0', port=80, debug=True, threaded=True)

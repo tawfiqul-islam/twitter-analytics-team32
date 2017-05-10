@@ -71,7 +71,7 @@ function drawScatterPlot() {
 	}
 
 	var dim = make_dimension(x_axis, y_axis);
-	var group = dim.group();
+	var group = remove_empty_bins(dim.group());
 
 	scatter_plot
 		.width(1000)
@@ -85,13 +85,28 @@ function drawScatterPlot() {
 		.xAxisLabel(scatter_column_infos[x_axis].detail)
 		.yAxisLabel(scatter_column_infos[y_axis].detail)
 		.dimension(dim)
-		.group(remove_empty_bins(group))
+		.group(group)
 		.keyAccessor(key_part(0))
 		.valueAccessor(key_part(1))
 		.title(generateTitle)
 		.renderTitle(true);
 
+	// determine coefficient
+	var xs = [];
+	var ys = [];
+	var coordinates = group.all();
+	for (var i=0; i<coordinates.length; i++) {
+		xs.push(coordinates[i].key[0]);
+		ys.push(coordinates[i].key[1]);
+	}
+	updateDescription(jStat.corrcoeff(xs,ys));
+
 	scatter_plot.render();
+}
+
+function updateDescription(corr) {
+	var div = document.getElementById('description');
+	div.innerHTML = 'Pearson correlation: ' + corr.toFixed(3);
 }
 
 function optionOnChangeScatter(y) {
@@ -182,7 +197,7 @@ function drawBarGraph(which_chart, c) {
 		.xUnits(dc.units.ordinal)
 		.brushOn(false)
 		.xAxisLabel('', 80) // 80 is bottom margin
-		//.yAxisLabel('', 0)
+		.yAxisLabel('', 30)
 		.dimension(lga_dim)
 		.barPadding(0.1)
 		.outerPadding(0.05)

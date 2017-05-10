@@ -4,7 +4,8 @@ body.application {
 }
 
 #mapid {
-	height: 75vh;
+	/*TODO change to 0.75*/
+	height: 80vh;
 }
 
 
@@ -172,3 +173,29 @@ body.application .navbar-custom {
 	vertical-align: middle;
 }
 
+.icon-box {
+	padding: 10px;
+	background: rgba(255,255,255,0.8);
+	box-shadow: 0 0 15px rgba(0,0,0,0.2); /* h-shadow v-shadow blur-distance color */
+	border-radius: 5px;
+	width: 230px;
+	max-width: 230px;
+}
+
+.icon-box img {
+	width: 24px;
+	height: 24px;
+	margin: 5px;
+}
+
+#description {
+	text-align: center;
+	font-size: 1.5em;
+}
+
+
+/* home page */
+#home-title,
+#home-team-member {
+	text-align: center;
+}
