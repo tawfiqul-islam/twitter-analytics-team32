@@ -110,27 +110,27 @@ def main(argv):
 
 	print(FINISH_READING)
 	count = 0
-
-	for _id in db_row:
-		tweet = db_row.get(_id)
-		if HAS_PROCESSED not in tweet:
-			gen_set.gen_negation_train_set(pos_set, 
-						                    neg_set,
-						                    afinn_dict,
-						                    emojis,
-						                    WORDS,
-						                    tweet,
-						                    db_row,
-						                    db_target,
-						                    config,
-						                    couch,
-						                    count_all,
-						                    punctuation,
-						                    stop,
-						                    couchdb,
-						                    lga,
-						                    negation_list,
-						                    food_dict)
+	while True:
+		for _id in db_row:
+			tweet = db_row.get(_id)
+			if HAS_PROCESSED not in tweet:
+				gen_set.gen_negation_train_set(pos_set, 
+									    neg_set,
+									    afinn_dict,
+									    emojis,
+									    WORDS,
+									    tweet,
+									    db_row,
+									    db_target,
+									    config,
+									    couch,
+									    count_all,
+									    punctuation,
+									    stop,
+									    couchdb,
+									    lga,
+									    negation_list,
+									    food_dict)
 
 
 if __name__ == '__main__':
