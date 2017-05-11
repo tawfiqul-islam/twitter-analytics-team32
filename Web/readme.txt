@@ -1,6 +1,11 @@
 
 HOW TO RUN
 
+make sure flask and shapely are installed.
+If not, do a pip install
+pip install flask
+pip install shapely
+
 
 Setup configuration file
 
