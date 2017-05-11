@@ -1,7 +1,7 @@
 # twitter-analytics-team32
 Repository for the project in Cluster and Cloud Computing Course at Unimelb.
 
-How to deploy a Cluster in Nectar/AWS cloud:
+How to deploy a Twitter Analysis Cluster in Nectar/AWS cloud:
 
 - Download the sources in your local system
 - Use the config.ini file to change the configurations on your need. You can change the number of VMs/Volumes to be created, access credentials to your cluster etc.
