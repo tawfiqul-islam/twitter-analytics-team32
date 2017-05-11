@@ -1,0 +1,125 @@
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+
+		<title>COMP90024 Team 32</title>
+
+		<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+		<link rel="stylesheet" type="text/css" href="../static/lib/css/bootstrap.min.css" />
+		<link rel="stylesheet" type="text/css" href="../static/lib/css/keen-dashboards.css" />
+
+		<link rel="stylesheet" href="../static/resources/css/my.css" />
+		<script src="../static/lib/js/jquery.min.js"></script>
+
+
+	</head>
+
+	<body class="application">
+
+		<div id="my-navbar">
+			<script>
+				$("#my-navbar").load("../static/resources/html/navbar.html");
+			</script>
+		</div>
+
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-12">
+					<div class="chart-wrapper">
+						<div class="chart-stage">
+							<div id="home-title">
+								<h1>Team 32 - COMP90024 Assignment 2</h1>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-12">
+					<div class="chart-wrapper">
+						<div class="chart-stage">
+							<div id="home-team-member">
+								<h2>Team Member</h2>
+								Guo Ming Sun<br>
+								Muhammed Tawfiqul Islam<br>
+								Shashikant Shankar Ilager<br>
+								Stephen Alexandro Tjandra<br>
+								Tuck Leong Ngun<br>
+								<br>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-12">
+					<div class="chart-wrapper">
+						<div class="chart-stage">
+							<div id="home-classifier-accuracy">
+								<h2>Tweets Statistics</h2>
+								<table class="home-stats">
+									<tr>
+										<td>Total Harvested Data</td>
+										<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+										<td>8 GB</td>
+									</tr>
+									<tr>
+										<td>Number of tweets used for training</td>
+										<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+										<td>283817 Tweets</td>
+									</tr>
+									<tr>
+										<td>Number of tweets predicted by sentiment classifier</td>
+										<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+										<td>582072 Tweets</td>
+									</tr>
+								</table> 
+
+								<h3>Sentiment Classifier</h3>
+								<table class="home-stats" border="1">
+									<tr>
+										<td></td>
+										<td>&nbsp;&nbsp;Accuracy&nbsp;&nbsp;</td>
+									</tr>
+									<tr>
+										<td>&nbsp;Multinomial Naive Bayes&nbsp;&nbsp;&nbsp;</td>
+										<td>&nbsp;&nbsp;77%</td>
+									</tr>
+									<tr>
+										<td>&nbsp;Logistic regresssion&nbsp;&nbsp;&nbsp;</td>
+										<td>&nbsp;&nbsp;85%</td>
+									</tr>
+									<tr>
+										<td>&nbsp;Neural Network&nbsp;&nbsp;&nbsp;</td>
+										<td>&nbsp;&nbsp;86%</td>
+									</tr>
+								</table>
+								<!--<h2>Classifier Accuracy</h2>-->
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+
+			<hr>
+			<p class="small text-muted">Built with &#9829; by <a href="https://keen.io">Keen IO</a></p>
+		</div>
+
+
+		<script src="../static/lib/js/bootstrap.min.js"></script>
+		<script src="../static/lib/js/holder.js"></script>
+		<script>
+			Holder.add_theme("white", { background:"#fff", foreground:"#a7a7a7", size:10 });
+		</script>
+		<script src="../static/lib/js/keen.min.js"></script>
+	</body>
+</html>
+

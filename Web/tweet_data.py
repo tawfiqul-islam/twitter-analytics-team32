@@ -129,6 +129,4 @@ def read_tweet_scenario_from_couchdb(n):
         return read_sentiment_from_couchdb(db)
     elif n == 2:
         return read_fast_food_from_couchdb(db)
-    elif n == 3:
-        return read_count_from_couchdb(db)
     return None

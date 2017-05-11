@@ -5,7 +5,7 @@ body.application {
 
 #mapid {
 	/*TODO change to 0.75*/
-	height: 80vh;
+	height: 85vh;
 }
 
 
@@ -198,4 +198,10 @@ body.application .navbar-custom {
 #home-title,
 #home-team-member {
 	text-align: center;
+}
+#home-classifier-accuracy {
+	text-align: center;
+}
+.home-stats {
+	margin: 0px auto;
 }
