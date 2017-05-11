@@ -10,7 +10,7 @@ volumeList=[];
 #reading configurations
 config = ConfigParser.ConfigParser()
 config2 = ConfigParser.ConfigParser()
-config.read("../config2.ini")
+config.read("../config.ini")
 AWS_ACCESS_KEY = config.get('cluster', 'AWS_ACCESS_KEY')
 AWS_SECRET_KEY = config.get('cluster', 'AWS_SECRET_KEY')
 IMAGE_TYPE = config.get('cluster', 'IMAGE_TYPE')
