@@ -110,29 +110,29 @@ def main(argv):
 	stop = load_stopwords()
 
 	print(FINISH_READING)
-
+	while true:
 	# process each document in the db
-	for _id in db_row:
-		tweet = db_row.get(_id)
+		for _id in db_row:
+			tweet = db_row.get(_id)
 
-		if HAS_PROCESSED not in tweet:
-			gen_set.gen_negation_set(
-	                   emojis,
-	                   WORDS,
-	                   tweet,
-	                   db_row,
-	                   db_target,
-	                   config,
-	                   couch,
-	                   count_all,
-	                   punctuation,
-	                   stop,
-	                   couchdb,
-	                   lga,
-	                   negation_list,
-	                   food_dict,
-	                   load_vec,
-	                   lr)
+			if HAS_PROCESSED not in tweet:
+				gen_set.gen_negation_set(
+				   emojis,
+				   WORDS,
+				   tweet,
+				   db_row,
+				   db_target,
+				   config,
+				   couch,
+				   count_all,
+				   punctuation,
+				   stop,
+				   couchdb,
+				   lga,
+				   negation_list,
+				   food_dict,
+				   load_vec,
+				   lr)
 
 
 
