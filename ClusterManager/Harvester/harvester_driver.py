@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     #Set up configuration
     config = configparser.ConfigParser()
-    config.read('../config.ini')
+    config.read('config.ini')
 
     auth = OAuthHandler(config['Harvest']['ConsumerKey'], config['Harvest']['ConsumerSecret'])
     auth.set_access_token(config['Harvest']['AccessToken'], config['Harvest']['AccesTokenSecret'])
