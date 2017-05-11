@@ -1,9 +1,0 @@
----
-- hosts: vm
-  remote_user: ubuntu
-  sudo: yes
-
-  tasks:
-  
-    - include: tasks/run-harvester.yml
-  
