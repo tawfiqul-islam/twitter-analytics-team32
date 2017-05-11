@@ -7,6 +7,7 @@ from boto.ec2.regioninfo import RegionInfo
 
 vmList=[];
 volumeList=[];
+
 #reading configurations
 config = ConfigParser.ConfigParser()
 config2 = ConfigParser.ConfigParser()
@@ -27,6 +28,7 @@ VOLUME_CREATE = config.get('cluster', 'VOLUME_CREATE')
 VOLUME_ATTACH = config.get('cluster', 'VOLUME_ATTACH')
 VOLUME_DELETE = config.get('cluster', 'VOLUME_DELETE')
 
+#this method is used to connect to the AWS/Nectar 
 def connect():
     region=RegionInfo(name='melbourne', endpoint='nova.rc.nectar.org.au')
     
@@ -38,6 +40,7 @@ def connect():
             path='/services/Cloud',validate_certs=False)
     return ec2_conn;
 
+#create VMs in the cluster according to the specifications in the config.ini file
 def createVM(ec2_conn):
     ec2_conn.run_instances('ami-86f4a44c', placement= PLACEMENT,
     key_name=KEY_PAIR, instance_type=IMAGE_TYPE, 
@@ -45,6 +48,7 @@ def createVM(ec2_conn):
     startUpVM(ec2_conn)
     return;
 
+#start the VMs to get their IDs, also update config files for harvester and ansible hosts file
 def startUpVM(ec2_conn):
     reservations = ec2_conn.get_all_reservations()
     config2.read('../Harvester/config.ini')
@@ -69,10 +73,12 @@ def startUpVM(ec2_conn):
     f.close() 
     return;
 
+#terminate existing vms
 def terminateVM(ec2_conn):
     ec2_conn.terminate_instances(instance_ids=vmList)
     return;
 
+#create new volumes
 def createVolume(ec2_conn):
     vsize=VOLUME_SIZE1
     i=0
@@ -89,6 +95,7 @@ def createVolume(ec2_conn):
         i=i+1   
     return;
 
+#attach created volumes to the Vms
 def attachVolume(ec2_conn):   
     i=0;
     while (i<len(volumeList)):
@@ -96,28 +103,27 @@ def attachVolume(ec2_conn):
         i=i+1
     return;
 
+#delete any previous volumes
 def deleteVolume(ec2_conn):
     curr_vol = ec2_conn.get_all_volumes()
     for vol in curr_vol:
         ec2_conn.delete_volume(vol.id, dry_run=False)
     return;
 
+#the main function
 def main():
     ec2_conn=connect()
-    #===========================================================================
-    # if(VM_TERMINATE=="true"):
-    #     terminateVM(ec2_conn)
-    # if(VOLUME_DELETE=="true"):
-    #    deleteVolume(ec2_conn)
-    #===========================================================================
+    if(VM_TERMINATE=="true"):
+       terminateVM(ec2_conn)
+    if(VOLUME_DELETE=="true"):
+       deleteVolume(ec2_conn)
     if(VM_CREATE=="true"):
-        createVM(ec2_conn)
-    #===========================================================================
-    # if(VOLUME_CREATE=="true"):
-    #     createVolume(ec2_conn)
-    # if(VOLUME_ATTACH=="true"):    
-    #     attachVolume(ec2_conn)
-    #===========================================================================
+       createVM(ec2_conn)
+    if(VOLUME_CREATE=="true"):
+       createVolume(ec2_conn)
+    if(VOLUME_ATTACH=="true"):    
+       attachVolume(ec2_conn)
+
     return;
     
 main();
