@@ -1,0 +1,12 @@
+---
+- hosts: vm
+  ignore_errors: True
+  remote_user: ubuntu
+  sudo: yes
+  gather_facts: no
+
+  tasks:
+  
+    - include: tasks/transfer-files.yml
+    - include: tasks/install-couchdb.yml
+    - include: tasks/run-harvester.yml

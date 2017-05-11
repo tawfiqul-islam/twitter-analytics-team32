@@ -2,21 +2,9 @@
 
 sudo sed -i '58,60 s/^/#/' /var/lib/dpkg/info/runit.postinst
 
-sudo apt-get --no-install-recommends -y install curl
 
-sudo apt-get --no-install-recommends -y install python-pip
-
-sudo pip install -U pip setuptools
-
-sudo pip install --upgrade pip
-
-sudo python -m pip install -U pip setuptools
-
-sudo pip install couchdb
-
-sudo pip install tweepy
-
-sudo pip install jsonpickle
+# install required software packages
+sudo sh installpackages.sh
 
 sudo sh install-couchdb.sh
 

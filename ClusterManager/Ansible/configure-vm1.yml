@@ -1,7 +1,0 @@
----
-- hosts: vm1
-  remote_user: ubuntu
-  sudo: yes
-
-  tasks:
-    - include: tasks/transfer-files1.yml
