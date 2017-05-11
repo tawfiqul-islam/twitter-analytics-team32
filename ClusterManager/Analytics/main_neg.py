@@ -110,7 +110,7 @@ def main(argv):
 	stop = load_stopwords()
 
 	print(FINISH_READING)
-	while true:
+	while True:
 	# process each document in the db
 		for _id in db_row:
 			tweet = db_row.get(_id)
