@@ -24,10 +24,12 @@ sudo pip install configparser
 
 sudo pip install argparse
 
-sudo apt-get update
-sudo apt-get install python3-pip
-pip3 install couchdb
-pip3 install numpy
-pip3 install sklearn
-pip3 install scipy
-pip3 install nltk
+sudo apt-get --no-install-recommends update
+sudo apt-get --no-install-recommends install python3-pip
+sudo pip3 install -U pip setuptools
+
+sudo pip3 install couchdb
+sudo pip3 install numpy
+sudo pip3 install sklearn
+sudo pip3 install scipy
+sudo pip3 install nltk

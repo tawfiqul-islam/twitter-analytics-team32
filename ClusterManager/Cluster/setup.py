@@ -10,7 +10,7 @@ volumeList=[];
 #reading configurations
 config = ConfigParser.ConfigParser()
 config2 = ConfigParser.ConfigParser()
-config.read("../config.ini")
+config.read("../config2.ini")
 AWS_ACCESS_KEY = config.get('cluster', 'AWS_ACCESS_KEY')
 AWS_SECRET_KEY = config.get('cluster', 'AWS_SECRET_KEY')
 IMAGE_TYPE = config.get('cluster', 'IMAGE_TYPE')
@@ -47,7 +47,9 @@ def createVM(ec2_conn):
 
 def startUpVM(ec2_conn):
     reservations = ec2_conn.get_all_reservations()
+    config2.read('../Harvester/config.ini')
     f = open('../Ansible/hosts', 'w')  
+    f.write('[vm]\n')
     i=0
     for res in reservations:
         for ins in res.instances:
@@ -56,14 +58,13 @@ def startUpVM(ec2_conn):
                 ins.update()
             print 'instance ', i , ' id:', ins.id
             vmList.append(ins.id)
-            f.write('[vm'+str(i+1)+']\n')
+            config2.set('VMTag', 'vm'+str(i+1), ins.private_ip_address)
             f.write(ins.private_ip_address+'\n')
             if(i==0):
                 dburlStr="http://"+ins.private_ip_address+":5984/"
-            config2.read('../Harvester/vm'+str(i+1)+'/config.ini')
-            config2.set('HarvestConfig', 'databaseip', dburlStr)
-            with open('../Harvester/vm'+str(i+1)+'/config.ini', 'wb') as configfile:
-                config2.write(configfile)
+                config2.set('Harvest', 'databaseip', dburlStr)
+                with open('../Harvester/config.ini', 'wb') as configfile:
+                    config2.write(configfile)
             i=i+1   
     f.close() 
     return;
@@ -75,8 +76,9 @@ def terminateVM(ec2_conn):
 def createVolume(ec2_conn):
     vsize=VOLUME_SIZE1
     i=0
-    while i <(int(VOLUME_COUNT)):
-        if (i>1):
+    vcount=int(VOLUME_COUNT)
+    while i <vcount:
+        if i>1:
             vsize=VOLUME_SIZE2
         vol_req=ec2_conn.create_volume(size=vsize, zone=PLACEMENT, volume_type='melbourne')    
         vol = ec2_conn.get_all_volumes([vol_req.id])[0]
@@ -110,10 +112,12 @@ def main():
     #===========================================================================
     if(VM_CREATE=="true"):
         createVM(ec2_conn)
-    if(VOLUME_CREATE=="true"):
-        createVolume(ec2_conn)
-    if(VOLUME_ATTACH=="true"):    
-        attachVolume(ec2_conn)
+    #===========================================================================
+    # if(VOLUME_CREATE=="true"):
+    #     createVolume(ec2_conn)
+    # if(VOLUME_ATTACH=="true"):    
+    #     attachVolume(ec2_conn)
+    #===========================================================================
     return;
     
 main();

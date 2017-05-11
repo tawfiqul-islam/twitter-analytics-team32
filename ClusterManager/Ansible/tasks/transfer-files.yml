@@ -1,8 +1,16 @@
+- command: mkdir /home/ubuntu/Harvester
+- command: mkdir /home/ubuntu/CouchDB
 - copy:
-    src: ../Harvester/vm1/
-    dest: /home/ubuntu/
+    src: ../../Harvester/
+    dest: /home/ubuntu/Harvester/
     owner: ubuntu
     group: ubuntu
     directory_mode: yes
-- command: sudo sh couchdb-main.sh
-- command: python tweet_search.py 
+    mode: "u=rwX,g=rX,o=rX"
+- copy:
+    src: ../../CouchDB/
+    dest: /home/ubuntu/CouchDB/
+    owner: ubuntu
+    group: ubuntu
+    directory_mode: yes
+    mode: "u=rwX,g=rX,o=rX"

@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 #Driver program for harvester
 
 import tweepy
@@ -17,6 +19,7 @@ from twitter_location_search import LocationCrawler
 import socket
 import time
 
+
 #from stream
 if __name__ == '__main__':
     #args
@@ -31,7 +34,7 @@ if __name__ == '__main__':
 
     #Set up configuration
     config = configparser.ConfigParser()
-    config.read('../config.ini')
+    config.read('config.ini')
 
     auth = OAuthHandler(config['Harvest']['ConsumerKey'], config['Harvest']['ConsumerSecret'])
     auth.set_access_token(config['Harvest']['AccessToken'], config['Harvest']['AccesTokenSecret'])
@@ -63,9 +66,8 @@ if __name__ == '__main__':
         locationdb = couch.create(locationdatabase)
     else:
         locationdb = couch[locationdatabase]
-
-
-    if my_rank == 'vm2':
+        
+    if my_rank == 'vm1':
         #STREAMER
         twitter_stream = Stream(auth, MyListener(db=db,args=args,userdb=userdb,locationdb=locationdb))
         api = tweepy.API(auth)

@@ -1,0 +1,2 @@
+- command: sleep 10
+- shell: cd /home/ubuntu/Harvester; nohup python harvester_driver.py -l -u -d > /dev/null 2>&1 &
