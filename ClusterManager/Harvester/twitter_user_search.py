@@ -30,7 +30,7 @@ import argparse
 import time
 
 class UserCrawler():
-    def __init__(self, userdb, db, args, maxtweets=None, locationdb=None,userID=None):
+    def __init__(self, userdb, dbs, args, maxtweets=None, locationdb=None,userID=None):
         if locationdb:
             self.locationdb = locationdb
         if userID:
@@ -39,15 +39,16 @@ class UserCrawler():
             self.maxtweets = maxtweets
 
         self.userdb = userdb
-        self.db = db
+        self.dbs = dbs
         self.args = args
 
         self.maxID = -1
+        self.count = 0
 
     #Crawl existing db and make a list of its users
     def add_users(self):
-        for tweetID in self.db:
-                    tweet = self.db[tweetID]
+        for tweetID in self.dbs[0]:
+                    tweet = self.dbs[0][tweetID]
                     try:
                         user = {}
                         user['_id'] = tweet['user']['id_str']
@@ -99,6 +100,7 @@ class UserCrawler():
         for status in status_list:
             tweet = status._json
             try:
+                self.count %= len(self.dbs)
                 if tweet['text']:
                     #check for retweets
                     if not tweet['retweeted'] and 'RT @' not in tweet['text']:
@@ -109,7 +111,7 @@ class UserCrawler():
                             tweet['place'] = doc['place']
                         tweet['_id'] = tweet['id_str']
                         self.maxID = tweet['id'] - 1
-                        self.db.save(tweet)
+                        self.dbs[self.count].save(tweet)
 
                     #when storing location data, store twitter locationID
                     if self.args.location and tweet['place']:
@@ -118,7 +120,7 @@ class UserCrawler():
                             location = {}
                             location['_id'] = tweet['place']['id']
                             self.locationdb.save(location)
-
+                    self.count += 1
             except couchdb.http.ResourceConflict as e:
                 #Collisions are expected, move on
                 pass
@@ -148,7 +150,7 @@ if __name__ == '__main__':
 
     #Set up configuration
     config = configparser.ConfigParser()
-    config.read('config.ini')
+    config.read('../config.ini')
 
     auth = OAuthHandler(config['Harvest']['ConsumerKey'], config['Harvest']['ConsumerSecret'])
     auth.set_access_token(config['Harvest']['AccessToken'], config['Harvest']['AccesTokenSecret'])
@@ -166,7 +168,7 @@ if __name__ == '__main__':
         raise SystemExit
     else:
         db = couch[databasename]
-
+    dbs = [db]
     if userdatabase not in couch:
         userdb = couch.create(userdatabase)
     else:
@@ -188,6 +190,6 @@ if __name__ == '__main__':
         raise SystemExit
 
     for userID in userdb:
-        crawler = UserCrawler(userdb,db,args,maxtweets,locationdb,userID)
+        crawler = UserCrawler(userdb,dbs,args,maxtweets,locationdb,userID)
         crawler.add_tweets()
 

@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 #Driver program for harvester
 
 import tweepy
@@ -19,7 +17,6 @@ from twitter_location_search import LocationCrawler
 import socket
 import time
 
-
 #from stream
 if __name__ == '__main__':
     #args
@@ -34,15 +31,13 @@ if __name__ == '__main__':
 
     #Set up configuration
     config = configparser.ConfigParser()
-    config.read('config.ini')
+    config.read('../config.ini')
 
     auth = OAuthHandler(config['Harvest']['ConsumerKey'], config['Harvest']['ConsumerSecret'])
     auth.set_access_token(config['Harvest']['AccessToken'], config['Harvest']['AccesTokenSecret'])
-    couch = couchdb.Server( config['Harvest']['DatabaseIP'])
     databasename = config['Stream']['DatabaseName']
     userdatabase = databasename + 'user'
     locationdatabase = databasename + 'location'
-
 
     #find rank based on IP
     my_ip = [(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
@@ -52,11 +47,19 @@ if __name__ == '__main__':
             my_rank = vmnum
 
     #open up dbs
-    if databasename not in couch:
-        db = couch.create(databasename)
-    else:
-        db = couch[databasename]
+    dbs = []
+    for vmname in config['VMTag']:
+        #note the port and ip format is assumed TODO: change to 5984 when ready
+        vmIP = config['VMTag'][vmname]
+        couch = couchdb.Server('http://' + vmIP + ':5986/')
+        tempname = databasename + vmname[2:]
+        if tempname not in couch:
+            tempdb = couch.create(tempname)
+        else:
+            tempdb = couch[tempname]
+        dbs.append(tempdb)
 
+    couch = couchdb.Server(config['Harvest']['DatabaseIP'])
     if userdatabase not in couch:
         userdb = couch.create(userdatabase)
     else:
@@ -66,22 +69,29 @@ if __name__ == '__main__':
         locationdb = couch.create(locationdatabase)
     else:
         locationdb = couch[locationdatabase]
-        
-    if my_rank == 'vm1':
-        #STREAMER
-        twitter_stream = Stream(auth, MyListener(db=db,args=args,userdb=userdb,locationdb=locationdb))
-        api = tweepy.API(auth)
-        twitter_stream.api = api
 
-        #This is the bounding box within which we want tweets
-        boundingbox = config['Stream']['Location']
-        boundingbox = boundingbox.split(',')
-        loc1 = float(boundingbox[0])
-        loc2 = float(boundingbox[1])
-        loc3 = float(boundingbox[2])
-        loc4 = float(boundingbox[3])
-        #Set up the stream
-        twitter_stream.filter(locations=[loc1,loc2,loc3,loc4])
+
+    if my_rank == 'vm2':
+        #STREAMER
+        while(True):
+            try:
+                twitter_stream = Stream(auth, MyListener(dbs=dbs,args=args,userdb=userdb,locationdb=locationdb))
+                api = tweepy.API(auth)
+                twitter_stream.api = api
+
+                #This is the bounding box within which we want tweets
+                boundingbox = config['Stream']['Location']
+                boundingbox = boundingbox.split(',')
+                loc1 = float(boundingbox[0])
+                loc2 = float(boundingbox[1])
+                loc3 = float(boundingbox[2])
+                loc4 = float(boundingbox[3])
+                #Set up the stream
+                twitter_stream.filter(locations=[loc1,loc2,loc3,loc4])
+            except Exception as e:
+                print(e)
+                time.sleep(15)
+                pass
 
     elif my_rank == 'vm3':
         #LOCATION SEARCHER
@@ -92,10 +102,8 @@ if __name__ == '__main__':
             locationdb = couch[locationdatabase]
             maxtweets = int(config['LocationSearch']['MaxTweets'])
 
-            crawler = LocationCrawler(locationdb,db,args)
-
             for locationID in locationdb:
-                crawler = LocationCrawler(locationdb,db,args,maxtweets,userdb,locationID)
+                crawler = LocationCrawler(locationdb,dbs,args,maxtweets,userdb,locationID)
                 crawler.add_tweets()
             time.sleep(1800)
 
@@ -109,9 +117,7 @@ if __name__ == '__main__':
             userdb = couch[userdatabase]
             maxtweets = int(config['UserSearch']['MaxTweets'])
 
-            crawler = UserCrawler(userdb,db,args)
-
             for userID in userdb:
-                crawler = UserCrawler(userdb,db,args,maxtweets,locationdb,userID)
+                crawler = UserCrawler(userdb,dbs,args,maxtweets,locationdb,userID)
                 crawler.add_tweets()
             time.sleep(1800)

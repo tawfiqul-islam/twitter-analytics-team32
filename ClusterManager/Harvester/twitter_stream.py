@@ -21,11 +21,12 @@ import argparse
 
 class MyListener(StreamListener):
     #Custom StreamListener for streaming data
-    def __init__(self,db,args,userdb,locationdb):
-        self.db = db
+    def __init__(self,dbs,args,userdb,locationdb):
+        self.dbs = dbs
         self.args = args
         self.userdb = userdb
         self.locationdb = locationdb
+        self.count = 0
 
     def set_userdb(self, userdb):
         self.userdb = userdb
@@ -36,13 +37,15 @@ class MyListener(StreamListener):
     #When receiving a tweet
     def on_data(self, data):
         try:
+            self.count %= len(self.dbs)
+            db = self.dbs[self.count]
             tweet = json.loads(data)
             #Ensure a tweet we are interested in then store in relevant DBs
             if tweet['text']:
                 #only store non retweets
                 if not tweet['retweeted'] and 'RT @' not in tweet['text']:
                     tweet['_id'] = tweet['id_str']
-                    self.db.save(tweet)
+                    db.save(tweet)
 
                 #when keeping user data, store their ID and tweet location
                 if self.args.user and tweet['user']['id_str']:
@@ -61,7 +64,7 @@ class MyListener(StreamListener):
                         location = {}
                         location['_id'] = tweet['place']['id']
                         self.locationdb.save(location)
-
+            self.count += 1
             return True
         except couchdb.http.ResourceConflict as e:
             #Collisions are expected, move on
@@ -85,7 +88,7 @@ if __name__ == '__main__':
 
     #Set up configuration
     config = configparser.ConfigParser()
-    config.read('config.ini')
+    config.read('../config.ini')
 
     auth = OAuthHandler(config['Harvest']['ConsumerKey'], config['Harvest']['ConsumerSecret'])
     auth.set_access_token(config['Harvest']['AccessToken'], config['Harvest']['AccesTokenSecret'])
@@ -104,6 +107,7 @@ if __name__ == '__main__':
     else:
         db = couch[databasename]
 
+    dbs = [db]
     #user option enabled
     if args.user:
         if userdatabase not in couch:
@@ -118,7 +122,7 @@ if __name__ == '__main__':
         else:
             locationdb = couch[locationdatabase]
 
-    twitter_stream = Stream(auth, MyListener(db=db,args=args,userdb=userdb,locationdb=locationdb))
+    twitter_stream = Stream(auth, MyListener(dbs=dbs,args=args,userdb=userdb,locationdb=locationdb))
     #This is the bounding box within which we want tweets
     boundingbox = config['Stream']['Location']
     boundingbox = boundingbox.split(',')

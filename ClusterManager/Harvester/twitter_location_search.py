@@ -25,7 +25,7 @@ import time
 
 
 class LocationCrawler():
-    def __init__(self,locationdb,db,args,maxtweets=None,userdb=None,locationID=None):
+    def __init__(self,locationdb,dbs,args,maxtweets=None,userdb=None,locationID=None):
         if userdb:
             self.userdb = userdb
         if locationID:
@@ -34,15 +34,16 @@ class LocationCrawler():
             self.maxtweets = maxtweets
 
         self.maxID = -1
+        self.count = 0
 
         self.locationdb = locationdb
-        self.db = db
+        self.dbs = dbs
         self.args = args
 
     #Crawl existing db and make a list of its locations
     def add_locations(self):
-        for tweetID in self.db:
-                    tweet = self.db[tweetID]
+        for tweetID in self.dbs[0]:
+                    tweet = self.dbs[0][tweetID]
                     if not tweet['place']:
                         #need a place
                         continue
@@ -96,6 +97,7 @@ class LocationCrawler():
 
         for tweet in status_list:
             try:
+                self.count %= len(self.dbs)
                 #first check if tweet is relevant aka has text and is not a retweet
                 if tweet['text']:
                     if not tweet['retweeted'] and 'RT @' not in tweet['text']:
@@ -109,7 +111,7 @@ class LocationCrawler():
                             #relevant tweet
                             tweet['_id'] = tweet['id_str']
                             self.maxID = tweet['id'] - 1
-                            self.db.save(tweet)
+                            self.dbs[self.count].save(tweet)
 
                             if self.args.user and tweet['user']['id_str']:
                                 #ensure id_str is available
@@ -119,6 +121,7 @@ class LocationCrawler():
                                 user['coordinates'] = tweet['coordinates']
                                 user['place'] = tweet['place']
                                 self.userdb.save(user)
+                        self.count += 1
             except couchdb.http.ResourceConflict as e:
                 #Collisions are expected, move on
                 pass
@@ -148,7 +151,7 @@ if __name__ == '__main__':
 
     #Set up configuration
     config = configparser.ConfigParser()
-    config.read('config.ini')
+    config.read('../config.ini')
 
     auth = OAuthHandler(config['Harvest']['ConsumerKey'], config['Harvest']['ConsumerSecret'])
     auth.set_access_token(config['Harvest']['AccessToken'], config['Harvest']['AccesTokenSecret'])
@@ -166,7 +169,7 @@ if __name__ == '__main__':
         raise SystemExit
     else:
         db = couch[databasename]
-
+    dbs = [db]
     if locationdatabase not in couch:
         locationdb = couch.create(locationdatabase)
     else:
@@ -188,5 +191,5 @@ if __name__ == '__main__':
         raise SystemExit
 
     for locationID in locationdb:
-        crawler = LocationCrawler(locationdb,db,args,maxtweets,userdb,locationID)
+        crawler = LocationCrawler(locationdb,dbs,args,maxtweets,userdb,locationID)
         crawler.add_tweets()
