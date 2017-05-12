@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+#This code is used to automatically Deploy a Cluster in Nectar/AWS cloud 
 import boto
 import time
 import ConfigParser
